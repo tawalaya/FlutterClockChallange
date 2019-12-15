@@ -96,17 +96,11 @@ class _ScheibenPainter extends CustomPainter {
     final yOffset = size.shortestSide / 2 - boxSize / 2;
     final scheibenOffset = Offset(xOffset, yOffset);
     final getRect = (scheibenOffset & Size(boxSize, boxSize));
-    // We want to start at the top, not at the x-axis, so add pi/2.
-    final angle = angleRadians - math.pi / 2.0;
+
     final linePaint = Paint()
       ..color = color
       ..strokeWidth = lineWidth
       ..strokeCap = StrokeCap.square;
-
-    //canvas.drawLine(center, position, linePaint);
-//    canvas.translate(size.width/2, size.height/2);
-//    canvas.rotate(math.pi*0.25);
-//    canvas.translate(-size.width/2, -size.height/2);
 
     canvas.drawArc(
         getRect, -math.pi / 2.0 + angleStart, angleRadians, true, linePaint);
@@ -118,7 +112,7 @@ class _ScheibenPainter extends CustomPainter {
         maxWidth: double.maxFinite,
       );
 
-      final textGabWith = _textPainter.width;
+      final textGabWith = 2.0;
       canvas.save();
       _paint_text(canvas, size, textGabWith);
       canvas.restore();
@@ -144,7 +138,7 @@ class _ScheibenPainter extends CustomPainter {
     for (int i = 0; i < text.length; i++) {
       angle = _drawLetter(canvas, text[i], angle, radius);
       rotation += angle;
-      if (rotation > angleRadians - textGabWith * tickSize) {
+      if (rotation > angleStart+angleRadians - 7*tickSize) {
         //indicate missing letters
         if (text.length - i > 2) {
           angle = _drawLetter(canvas, ".", angle, radius);

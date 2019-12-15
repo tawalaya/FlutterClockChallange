@@ -6,11 +6,11 @@ class Termin implements Comparable<Termin> {
   final String title;
 
   Termin(this.start, this.end, this.title) {
-    log("created Termin ${this.start} - ${this.end} = ${this.title}");
+//    log("Termin(${this.start.hour}:${this.start.minute} - ${this.end.hour}:${this.end.minute}}");
     assert(this.start.isBefore(this.end));
   }
 
-  int get length => this.start.difference(this.end).inHours;
+  Duration get length => this.end.difference(this.start);
 
   @override
   int compareTo(Termin other) {

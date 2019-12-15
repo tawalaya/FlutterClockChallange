@@ -23,6 +23,8 @@ final radiansPerTick = radians(360 / 60);
 /// Total distance traveled by an hour hand, each hour, in radians.
 final radiansPerHour = radians(360 / 12);
 
+final radiansPerSecond = radians(360 / 12 / 60);
+
 /// A basic analog clock.
 ///
 /// You can do better than this!
@@ -42,8 +44,6 @@ class _AnalogClockState extends State<AnalogClock> {
   var _condition = '';
   var _location = '';
   Timer _timer;
-
-  var _termine = [];
 
   @override
   void initState() {
@@ -82,14 +82,6 @@ class _AnalogClockState extends State<AnalogClock> {
   void _updateTime() {
     setState(() {
       _now = DateTime.now();
-      final lastMidnight = new DateTime(_now.year, _now.month, _now.day);
-      final start = lastMidnight.add(Duration(
-          hours: math.Random().nextInt(24),
-          minutes: math.Random().nextInt(59)));
-      final end = start.add(Duration(
-          hours: math.Random().nextInt(2), minutes: math.Random().nextInt(59)));
-
-      _termine.add(Termin(start, end, "Test i"));
       // Update once per second. Make sure to do it at the beginning of each
       // new second, so that the clock is accurate.
       _timer = Timer(
@@ -142,6 +134,11 @@ class _AnalogClockState extends State<AnalogClock> {
     final lastMidnight = new DateTime(_now.year, _now.month, _now.day);
     final lastHour = new DateTime(_now.year, _now.month, _now.day, _now.hour);
 
+    final t = <Termin>[];
+    final s = DateTime.now();
+    final e = s.add(Duration(minutes: 5));
+    t.add(Termin(s,e,"Test 25m"));
+
     final clockFace = <Widget>[];
 
     var end;
@@ -151,16 +148,16 @@ class _AnalogClockState extends State<AnalogClock> {
       end = lastMidnight.add(Duration(hours: 23, minutes: 59));
     }
 
-    final hourDates = _termine.where((t) => t.isBefore(end));
+    final hourDates = t.where((t) => t.isBefore(end));
 
     for (Termin t in hourDates) {
       clockFace.add(Scheibe(
         color: Colors.blue.withOpacity(0.5),
         size: 1,
         thickness: 2,
-        angleRadians: t.length * radiansPerHour,
+        angleRadians: math.max(1,t.length.inHours)*radiansPerTick,
         angleStart:
-            t.start.hour * radiansPerHour + t.start.minute * radiansPerTick,
+            t.start.hour%12 * radiansPerHour + t.start.minute * radiansPerSecond,
         text: t.title,
       ));
     }
@@ -173,17 +170,17 @@ class _AnalogClockState extends State<AnalogClock> {
       angleStart: 0,
     ));
 
-    final minuteDates = _termine.where(
+    final minuteDates = t.where(
         (t) => t.includedIn(lastHour, lastHour.add(Duration(minutes: 59))));
 
-    for (Termin t in hourDates) {
+    for (Termin t in minuteDates) {
       clockFace.add(Scheibe(
         color: Colors.red.withOpacity(0.5),
         size: 0.95,
         thickness: 2,
-        angleRadians: t.length * radiansPerHour,
+        angleRadians: math.max(1,t.length.inMinutes)*radiansPerTick,
         angleStart:
-            t.start.hour * radiansPerHour + t.start.minute * radiansPerTick,
+          t.start.minute * radiansPerTick,
         text: t.title,
       ));
     }
