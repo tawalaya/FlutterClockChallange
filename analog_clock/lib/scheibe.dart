@@ -2,15 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:developer';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-
-import 'hand.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 
-final tickSize = radians(360/12/60);
+import 'hand.dart';
+
+final tickSize = radians(360 / 12 / 60);
 
 /// A clock hand that is drawn with [CustomPainter]
 ///
@@ -53,8 +52,8 @@ class Scheibe extends Hand {
             lineWidth: thickness,
             angleRadians: angleRadians,
             color: color,
-            angleStart:angleStart,
-            text:text,
+            angleStart: angleStart,
+            text: text,
           ),
         ),
       ),
@@ -85,7 +84,6 @@ class _ScheibenPainter extends CustomPainter {
   double angleRadians;
   Color color;
 
-
   TextStyle textStyle = TextStyle(color: Colors.black);
 
   final String text;
@@ -93,11 +91,11 @@ class _ScheibenPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var boxSize = size.shortestSide*handSize;
-    final xOffset = size.longestSide/2-boxSize/2;
-    final yOffset = size.shortestSide/2-boxSize/2;
-    final scheibenOffset = Offset(xOffset,yOffset);
-    final getRect = (scheibenOffset & Size(boxSize,boxSize) );
+    var boxSize = size.shortestSide * handSize;
+    final xOffset = size.longestSide / 2 - boxSize / 2;
+    final yOffset = size.shortestSide / 2 - boxSize / 2;
+    final scheibenOffset = Offset(xOffset, yOffset);
+    final getRect = (scheibenOffset & Size(boxSize, boxSize));
     // We want to start at the top, not at the x-axis, so add pi/2.
     final angle = angleRadians - math.pi / 2.0;
     final linePaint = Paint()
@@ -110,21 +108,29 @@ class _ScheibenPainter extends CustomPainter {
 //    canvas.rotate(math.pi*0.25);
 //    canvas.translate(-size.width/2, -size.height/2);
 
-    canvas.drawArc(getRect, -math.pi / 2.0+angleStart, angleRadians , true, linePaint);
+    canvas.drawArc(
+        getRect, -math.pi / 2.0 + angleStart, angleRadians, true, linePaint);
 
     if (text != null) {
+      _textPainter.text = TextSpan(text: "...", style: textStyle);
+      _textPainter.layout(
+        minWidth: 0,
+        maxWidth: double.maxFinite,
+      );
+
+      final textGabWith = _textPainter.width;
       canvas.save();
-      _paint_text(canvas, size);
+      _paint_text(canvas, size, textGabWith);
       canvas.restore();
     }
   }
 
-  void _paint_text(Canvas canvas, Size size) {
-    final radius = size.shortestSide*handSize*0.5;
+  void _paint_text(Canvas canvas, Size size, double textGabWith) {
+    final radius = size.shortestSide * handSize * 0.5;
     canvas.translate(size.width / 2, size.height / 2 - radius);
 
     //offset from start of bonding box
-    angleStart+=tickSize;
+    angleStart += tickSize;
 
     if (angleStart != 0) {
       final d = 2 * radius * math.sin(angleStart / 2);
@@ -136,28 +142,28 @@ class _ScheibenPainter extends CustomPainter {
     double angle = angleStart;
     double rotation = angle;
     for (int i = 0; i < text.length; i++) {
-      angle = _drawLetter(canvas, text[i], angle,radius);
-      rotation+=angle;
-      if (rotation > angleRadians-7*tickSize) {
+      angle = _drawLetter(canvas, text[i], angle, radius);
+      rotation += angle;
+      if (rotation > angleRadians - textGabWith * tickSize) {
         //indicate missing letters
-        if (text.length-i > 2) {
+        if (text.length - i > 2) {
           angle = _drawLetter(canvas, ".", angle, radius);
           angle = _drawLetter(canvas, ".", angle, radius);
           angle = _drawLetter(canvas, ".", angle, radius);
-        } else{
+        } else {
           //don't even try to get this next time ;)
-          i+=1;
+          i += 1;
           for (; i < text.length; i++) {
-            angle = _drawLetter(canvas, text[i], angle,radius);
+            angle = _drawLetter(canvas, text[i], angle, radius);
           }
         }
         break;
       }
     }
-
   }
 
-  double _drawLetter(Canvas canvas, String letter, double prevAngle,double radius) {
+  double _drawLetter(
+      Canvas canvas, String letter, double prevAngle, double radius) {
     _textPainter.text = TextSpan(text: letter, style: textStyle);
     _textPainter.layout(
       minWidth: 0,
