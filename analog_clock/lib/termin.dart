@@ -4,8 +4,9 @@ class Termin implements Comparable<Termin> {
   final DateTime start;
   final DateTime end;
   final String title;
+  final String id;
 
-  Termin(this.start, this.end, this.title) {
+  Termin(this.start, this.end, this.title,this.id) {
 //    log("Termin(${this.start.hour}:${this.start.minute} - ${this.end.hour}:${this.end.minute}}");
     assert(this.start.isBefore(this.end));
   }

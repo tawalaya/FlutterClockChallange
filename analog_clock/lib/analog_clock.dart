@@ -11,11 +11,12 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_clock_helper/model.dart';
 import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
-
+import 'package:device_calendar/device_calendar.dart';
 import 'container_hand.dart';
 import 'drawn_hand.dart';
 import 'termin.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter/services.dart';
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
 final radiansPerTick = radians(360 / 60);
@@ -38,6 +39,9 @@ class AnalogClock extends StatefulWidget {
 }
 
 class _AnalogClockState extends State<AnalogClock> {
+  DeviceCalendarPlugin _deviceCalendarPlugin;
+  List<Event> _events;
+
   var _now = DateTime.now();
   var _temperature = '';
   var _temperatureRange = '';
@@ -45,13 +49,32 @@ class _AnalogClockState extends State<AnalogClock> {
   var _location = '';
   Timer _timer;
 
+
+  List<Color> _eventColors = new List();
+
+  _AnalogClockState(){
+    _deviceCalendarPlugin = DeviceCalendarPlugin();
+
+
+    //XXX fix me generate some nice colors for a few events
+    final rnd = new math.Random();
+    var baseColors = [Color.fromRGBO(66,133,244,1),Color.fromRGBO(219,68,55,1),Color.fromRGBO(244,160,0,1),Color.fromRGBO(15,157,88,1)];
+    for(int i = 0;i<8;i++){
+      _eventColors.add(Color.lerp(baseColors[0],baseColors[1],rnd.nextInt(100)/100));
+      _eventColors.add(Color.lerp(baseColors[1],baseColors[2],rnd.nextInt(100)/100));
+      _eventColors.add(Color.lerp(baseColors[2],baseColors[3],rnd.nextInt(100)/100));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+
     widget.model.addListener(_updateModel);
     // Set the initial values.
     _updateTime();
     _updateModel();
+    _retrieveCalendars();
   }
 
   @override
@@ -60,6 +83,33 @@ class _AnalogClockState extends State<AnalogClock> {
     if (widget.model != oldWidget.model) {
       oldWidget.model.removeListener(_updateModel);
       widget.model.addListener(_updateModel);
+    }
+  }
+
+  void _retrieveCalendars() async {
+    try {
+      var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
+      if (permissionsGranted.isSuccess && !permissionsGranted.data) {
+        permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
+        if (!permissionsGranted.isSuccess || !permissionsGranted.data) {
+          return;
+        }
+      }
+
+      final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
+      final lastMidnight = new DateTime(_now.year, _now.month, _now.day);
+      final nextMidnight =  new DateTime(_now.year, _now.month, _now.day,23,59);
+      final List<Event> events = new List();
+      for(Calendar c in calendarsResult?.data){
+
+        var result = await _deviceCalendarPlugin.retrieveEvents(c.id, RetrieveEventsParams(startDate:lastMidnight,endDate: nextMidnight ));
+        events.addAll(result?.data);
+      }
+      setState(() {
+        _events = events;
+      });
+    } on PlatformException catch (e) {
+      print(e);
     }
   }
 
@@ -91,6 +141,10 @@ class _AnalogClockState extends State<AnalogClock> {
     });
   }
 
+  Color pickColor(String id){
+    return _eventColors[id.hashCode%_eventColors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     // There are many ways to apply themes to your clock. Some are:
@@ -115,18 +169,16 @@ class _AnalogClockState extends State<AnalogClock> {
             highlightColor: Color(0xFF4285F4),
             accentColor: Color(0xFF8AB4F8),
             backgroundColor: Color(0xFF3C4043),
+
           );
 
     final time = DateFormat.Hms().format(DateTime.now());
     final weatherInfo = DefaultTextStyle(
-      style: TextStyle(color: customTheme.primaryColor),
+      style: TextStyle(color: customTheme.primaryColor,fontSize: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_temperature),
-          Text(_temperatureRange),
-          Text(_condition),
-          Text(_location),
+          Text(DateFormat.yMMMd().format(_now)),
         ],
       ),
     );
@@ -135,9 +187,15 @@ class _AnalogClockState extends State<AnalogClock> {
     final lastHour = new DateTime(_now.year, _now.month, _now.day, _now.hour);
 
     final t = <Termin>[];
-    final s = DateTime.now();
-    final e = s.add(Duration(minutes: 5));
-    t.add(Termin(s,e,"Test 25m"));
+    if(_events != null) {
+      for (Event e in _events) {
+        if(e != null && !e.allDay) {
+          t.add(Termin(e.start, e.end, e.title,e.eventId));
+        }
+      }
+    }
+
+    t.sort();
 
     final clockFace = <Widget>[];
 
@@ -152,10 +210,10 @@ class _AnalogClockState extends State<AnalogClock> {
 
     for (Termin t in hourDates) {
       clockFace.add(Scheibe(
-        color: Colors.blue.withOpacity(0.5),
+        color: pickColor(t.id).withOpacity(0.7),
         size: 1,
         thickness: 2,
-        angleRadians: math.max(1,t.length.inHours)*radiansPerTick,
+        angleRadians: math.max(1,t.length.inHours)*radiansPerHour,
         angleStart:
             t.start.hour%12 * radiansPerHour + t.start.minute * radiansPerSecond,
         text: t.title,
@@ -175,10 +233,10 @@ class _AnalogClockState extends State<AnalogClock> {
 
     for (Termin t in minuteDates) {
       clockFace.add(Scheibe(
-        color: Colors.red.withOpacity(0.5),
+        color: pickColor(t.id).withOpacity(0.7),
         size: 0.95,
         thickness: 2,
-        angleRadians: math.max(1,t.length.inMinutes)*radiansPerTick,
+        angleRadians: math.max(1,math.min(60,t.length.inMinutes))*radiansPerTick,
         angleStart:
           t.start.minute * radiansPerTick,
         text: t.title,
@@ -252,12 +310,12 @@ class _AnalogClockState extends State<AnalogClock> {
       child: Container(
         color: customTheme.backgroundColor,
         child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.black,
-            ),
-            shape: BoxShape.circle,
-          ),
+//          decoration: BoxDecoration(
+//            border: Border.all(
+//              color: Colors.black,
+//            ),
+//            shape: BoxShape.circle,
+//          ),
           child: Stack(
             children: clockFace,
           ),
