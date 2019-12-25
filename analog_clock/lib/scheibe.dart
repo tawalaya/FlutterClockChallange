@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:developer';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -23,17 +24,17 @@ class Scheibe extends Hand {
   const Scheibe({
     @required Color color,
     @required this.thickness,
-    @required double size,
+    @required double scale,
     @required double angleRadians,
     @required this.angleStart,
     this.text,
   })  : assert(color != null),
         assert(thickness != null),
-        assert(size != null),
+        assert(scale != null),
         assert(angleRadians != null),
         super(
           color: color,
-          size: size,
+          size: scale,
           angleRadians: angleRadians,
         );
 
@@ -48,8 +49,8 @@ class Scheibe extends Hand {
       child: SizedBox.expand(
         child: CustomPaint(
           painter: _ScheibenPainter(
-            handSize: size,
-            lineWidth: thickness,
+            scale: size,
+            thickness: thickness,
             angleRadians: angleRadians,
             color: color,
             angleStart: angleStart,
@@ -64,34 +65,38 @@ class Scheibe extends Hand {
 /// [CustomPainter] that draws a clock hand.
 class _ScheibenPainter extends CustomPainter {
   _ScheibenPainter({
-    @required this.handSize,
-    @required this.lineWidth,
+    @required this.scale,
+    @required this.thickness,
     @required this.angleRadians,
     @required this.angleStart,
     @required this.color,
     this.text,
-  })  : assert(handSize != null),
-        assert(lineWidth != null),
+  })  : assert(scale != null),
+        assert(thickness != null),
         assert(angleRadians != null),
         assert(angleStart != null),
         assert(color != null),
-        assert(handSize >= 0.0),
-        assert(handSize <= 1.0);
+        assert(scale >= 0.0),
+        assert(scale <= 1.0);
 
-  double handSize;
-  double lineWidth;
+  double scale;
+  double thickness;
   double angleStart;
   double angleRadians;
   Color color;
 
-  TextStyle textStyle = TextStyle(color: Colors.black);
+  TextStyle textStyle;
 
   final String text;
   final _textPainter = TextPainter(textDirection: TextDirection.ltr);
 
   @override
   void paint(Canvas canvas, Size size) {
-    var boxSize = size.shortestSide * handSize;
+
+    var boxSize = size.shortestSide * scale;
+    var fontSize = ((size.shortestSide/2)*thickness*0.9).floor()*1.0;
+
+    textStyle = TextStyle(color: Colors.black,fontSize:  fontSize);
     final xOffset = size.longestSide / 2 - boxSize / 2;
     final yOffset = size.shortestSide / 2 - boxSize / 2;
     final scheibenOffset = Offset(xOffset, yOffset);
@@ -99,7 +104,6 @@ class _ScheibenPainter extends CustomPainter {
 
     final linePaint = Paint()
       ..color = color
-      ..strokeWidth = lineWidth
       ..strokeCap = StrokeCap.square;
 
     canvas.drawArc(
@@ -112,15 +116,15 @@ class _ScheibenPainter extends CustomPainter {
         maxWidth: double.maxFinite,
       );
 
-      final textGabWith = 2.0;
+      final textGabWith = _textPainter.width;
       canvas.save();
       _paint_text(canvas, size, textGabWith);
       canvas.restore();
     }
   }
-
-  void _paint_text(Canvas canvas, Size size, double textGabWith) {
-    final radius = size.shortestSide * handSize * 0.5;
+  //XXX: Fix text offset
+  void _paint_text(Canvas canvas, Size size, double textGabWidth) {
+    final radius = size.shortestSide * scale * 0.5;
     canvas.translate(size.width / 2, size.height / 2 - radius);
 
     //offset from start of bonding box
@@ -139,6 +143,7 @@ class _ScheibenPainter extends CustomPainter {
       angle = _drawLetter(canvas, text[i], angle, radius);
       rotation += angle;
       if (rotation > angleStart+angleRadians - 7*tickSize) {
+
         //indicate missing letters
         if (text.length - i > 2) {
           angle = _drawLetter(canvas, ".", angle, radius);
@@ -181,8 +186,8 @@ class _ScheibenPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ScheibenPainter oldDelegate) {
-    return oldDelegate.handSize != handSize ||
-        oldDelegate.lineWidth != lineWidth ||
+    return oldDelegate.scale != scale ||
+        oldDelegate.thickness != thickness ||
         oldDelegate.angleRadians != angleRadians ||
         oldDelegate.color != color;
   }

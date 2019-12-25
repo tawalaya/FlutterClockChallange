@@ -13,6 +13,32 @@ class Termin implements Comparable<Termin> {
 
   Duration get length => this.end.difference(this.start);
 
+  Duration lengthIn(DateTime start,DateTime end) {
+    DateTime s;
+    if(this.start.isBefore(start)){
+      s = start;
+    } else {
+      s = this.start;
+    }
+
+    DateTime e;
+    if(this.end.isAfter(end)){
+      e = end;
+    } else {
+      e = this.end;
+    }
+
+    return e.difference(s);
+  }
+
+  DateTime getRelativeStart(DateTime reference) {
+    if(this.start.isBefore(reference)){
+      return reference;
+    } else {
+      return this.start;
+    }
+  }
+
   @override
   int compareTo(Termin other) {
     /*
