@@ -7,18 +7,20 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 
-final tickSize = radians(360 / 12 );
+final tickSize = radians(360 / 60);
 
 class ClockFace extends StatelessWidget {
 
   const ClockFace({
-    @required this.color,
+    @required this.primaryColor,
+    @required this.secondaryColor,
     @required this.thickness,
-  })  : assert(color != null),
+  })  : assert(primaryColor != null),
         assert(thickness != null);
 
   final double thickness;
-  final Color color;
+  final Color primaryColor;
+  final Color secondaryColor;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,8 @@ class ClockFace extends StatelessWidget {
       child: SizedBox.expand(
         child: CustomPaint(
           painter: _ClockFacePainter(
-            color: color,
+            primary: primaryColor,
+            secondary:secondaryColor,
           ),
         ),
       ),
@@ -36,11 +39,25 @@ class ClockFace extends StatelessWidget {
 
 /// [CustomPainter] that draws a clock hand.
 class _ClockFacePainter extends CustomPainter {
-  _ClockFacePainter({
-    @required this.color,
-  })  : assert(color != null);
+  Paint primaryPaint;
+  Paint secondaryPaint;
 
-  Color color;
+  _ClockFacePainter({
+    @required this.primary, this.secondary,
+  })  : assert(primary != null) {
+    primaryPaint = Paint()
+      ..color = primary.withOpacity(0.8)
+      ..strokeCap = StrokeCap.square;
+
+    secondaryPaint = Paint()
+      ..color = secondary.withOpacity(0.8)
+      ..strokeCap = StrokeCap.square;
+  }
+
+  final Color primary;
+  final Color secondary;
+
+  
   @override
   void paint(Canvas canvas, Size drawSize) {
 
@@ -48,14 +65,22 @@ class _ClockFacePainter extends CustomPainter {
     final xOffset = drawSize.longestSide / 2 ;
     final yOffset = drawSize.shortestSide / 2 ;
 
-    final paint = Paint()
-      ..color = color.withOpacity(0.8)
-      ..strokeCap = StrokeCap.square;
+
+
+
 
     canvas.save();
     canvas.translate(xOffset, yOffset);
-    for(int i = 0;i<12;i++) {
-      canvas.drawRect(Rect.fromCenter(center:Offset(boxSize-boxSize*0.08, 0),width: boxSize*0.10,height: 10), paint);
+    for(int i = 0;i<60;i+=1) {
+
+    if(i%5 == 0){
+      canvas.drawCircle(Offset(boxSize-boxSize*0.06, 0),boxSize*0.035,primaryPaint);
+    } else {
+      canvas.drawRect(Rect.fromCenter(
+          center: Offset(boxSize - boxSize * 0.06, 0),
+          width: boxSize * 0.05,
+          height: 3), secondaryPaint);
+    }
       canvas.rotate(tickSize);
     }
     canvas.restore();
@@ -64,7 +89,7 @@ class _ClockFacePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ClockFacePainter oldDelegate) {
-    return oldDelegate.color != color;
+    return oldDelegate.primary != primary || oldDelegate.secondary != secondary;
   }
 
 }

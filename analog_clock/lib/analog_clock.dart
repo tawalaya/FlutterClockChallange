@@ -222,7 +222,7 @@ class _AnalogClockState extends State<AnalogClock> {
     //outer ring
     for (Termin t in eventsToShow) {
       clockFace.add(Scheibe(
-        color: pickColor(t.id).withOpacity(0.7),
+        color: pickColor(t.id),
         scale: 1,
         thickness: 0.05,
         angleRadians: math.max(0,t.lengthIn(start, end).inMinutes)*radiansPerSecond,
@@ -234,7 +234,7 @@ class _AnalogClockState extends State<AnalogClock> {
 
     clockFace.add(Scheibe(
       color: customTheme.backgroundColor,
-      scale: 0.95,
+      scale: 0.94,
       thickness: 2,
       angleRadians: 2 * math.pi,
       angleStart: 0,
@@ -247,7 +247,7 @@ class _AnalogClockState extends State<AnalogClock> {
     for (Termin t in minuteDates) {
       clockFace.add(Scheibe(
         color: pickColor(t.id).withOpacity(0.7),
-        scale: 0.95,
+        scale: 0.94,
         thickness: 0.05,
         angleRadians: t.lengthIn(lastHour,nextHour).inMinutes*radiansPerTick,
         angleStart:
@@ -255,7 +255,7 @@ class _AnalogClockState extends State<AnalogClock> {
         text: t.title,
       ));
     }
-
+    clockFace.add(ClockFace(primaryColor: customTheme.primaryColor,secondaryColor: customTheme.accentColor,thickness: 1,));
 //    clockFace.add(Scheibe(
 //      color: customTheme.backgroundColor,
 //      size: 0.90,
@@ -263,7 +263,7 @@ class _AnalogClockState extends State<AnalogClock> {
 //      angleRadians: 2 * math.pi,
 //      angleStart: 0,
 //    ));
-    clockFace.add(ClockFace(color: customTheme.primaryColor,thickness: 1,));
+
     clockFace.addAll([
       DrawnHand(
         //seconds
@@ -323,12 +323,7 @@ class _AnalogClockState extends State<AnalogClock> {
       child: Container(
         color: customTheme.backgroundColor,
         child: Container(
-//          decoration: BoxDecoration(
-//            border: Border.all(
-//              color: Colors.black,
-//            ),
-//            shape: BoxShape.circle,
-//          ),
+          padding: EdgeInsets.all(15),
           child: Stack(
             children: clockFace,
           ),
