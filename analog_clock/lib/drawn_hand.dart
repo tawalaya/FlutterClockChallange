@@ -55,6 +55,10 @@ class DrawnHand extends Hand {
 
 /// [CustomPainter] that draws a clock hand.
 class _HandPainter extends CustomPainter {
+  Paint linePaint;
+  Paint shadow;
+
+
   _HandPainter({
     @required this.handSize,
     @required this.lineWidth,
@@ -65,7 +69,14 @@ class _HandPainter extends CustomPainter {
         assert(angleRadians != null),
         assert(color != null),
         assert(handSize >= 0.0),
-        assert(handSize <= 1.0);
+        assert(handSize <= 1.0){
+    linePaint = Paint()
+      ..color = color
+      ..strokeWidth = lineWidth
+      ..strokeCap = StrokeCap.round;
+
+    shadow = Paint()..color=Color.fromRGBO(0, 0, 0, 1)..strokeWidth = lineWidth..strokeCap = StrokeCap.round..blendMode=BlendMode.softLight;
+  }
 
   double handSize;
   double lineWidth;
@@ -82,12 +93,6 @@ class _HandPainter extends CustomPainter {
     final start = (center +
         Offset(math.cos(angle), math.sin(angle)) * (size.shortestSide) *0.5*0.07)
         +Offset(math.cos(angle), math.sin(angle)) * 0.5*lineWidth;
-    final linePaint = Paint()
-      ..color = color
-      ..strokeWidth = lineWidth
-      ..strokeCap = StrokeCap.round;
-
-    final shadow = Paint()..color=Color.fromRGBO(0, 0, 0, 1)..strokeWidth = lineWidth..strokeCap = StrokeCap.round..blendMode=BlendMode.softLight;
 
     canvas.drawLine(start+Offset(2,2), position+Offset(2*0.9,2*0.9),shadow );
     canvas.drawLine(start, position, linePaint);
@@ -99,6 +104,6 @@ class _HandPainter extends CustomPainter {
     return oldDelegate.handSize != handSize ||
         oldDelegate.lineWidth != lineWidth ||
         oldDelegate.angleRadians != angleRadians ||
-        oldDelegate.color != color;
+        oldDelegate.color != color;;
   }
 }

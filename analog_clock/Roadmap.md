@@ -12,11 +12,9 @@ Based on: https://flutter.dev/clock#submissions
     [ ] First usage flow
     [ ] How to get Event Colors?
     [ ] Anderes Layout?
-    [ ] Events Editierbar?
-    [ ] HourTracker? Modus der ein event von Jetzt-Stopp erstellt zum z.B. stunden tracken?
-    [ ] Refresh events periodicly
+    [x] Refresh events periodicly
     [ ] optimize render, events do not need to be created for every draw?
-
+    [ ] optimize repaint (reduce repaint of static components) 
 # optinal
 - Calendar View
 

@@ -16,6 +16,7 @@ import 'package:device_calendar/device_calendar.dart';
 import 'drawn_hand.dart';
 import 'termin.dart';
 import 'package:flutter/services.dart';
+
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
 final radiansPerTick = radians(360 / 60);
@@ -41,7 +42,7 @@ class AnalogClock extends StatefulWidget {
 
 class _AnalogClockState extends State<AnalogClock> {
   DeviceCalendarPlugin _deviceCalendarPlugin;
-  List<Event> _events;
+  List<Termin> _terminArray;
 
   var _now = DateTime.now();
   var _temperature = '';
@@ -51,20 +52,26 @@ class _AnalogClockState extends State<AnalogClock> {
   Timer _timer;
   Timer _calenderFetcher;
 
-
   List<Color> _eventColors = new List();
 
-  _AnalogClockState(){
+  _AnalogClockState() {
     _deviceCalendarPlugin = DeviceCalendarPlugin();
-
 
     //XXX fix me generate some nice colors for a few events
     final rnd = new math.Random();
-    var baseColors = [Color.fromRGBO(66,133,244,1),Color.fromRGBO(219,68,55,1),Color.fromRGBO(244,160,0,1),Color.fromRGBO(15,157,88,1)];
-    for(int i = 0;i<8;i++){
-      _eventColors.add(Color.lerp(baseColors[0],baseColors[1],rnd.nextInt(100)/100));
-      _eventColors.add(Color.lerp(baseColors[1],baseColors[2],rnd.nextInt(100)/100));
-      _eventColors.add(Color.lerp(baseColors[2],baseColors[3],rnd.nextInt(100)/100));
+    var baseColors = [
+      Color.fromRGBO(66, 133, 244, 1),
+      Color.fromRGBO(219, 68, 55, 1),
+      Color.fromRGBO(244, 160, 0, 1),
+      Color.fromRGBO(15, 157, 88, 1)
+    ];
+    for (int i = 0; i < 8; i++) {
+      _eventColors.add(
+          Color.lerp(baseColors[0], baseColors[1], rnd.nextInt(100) / 100));
+      _eventColors.add(
+          Color.lerp(baseColors[1], baseColors[2], rnd.nextInt(100) / 100));
+      _eventColors.add(
+          Color.lerp(baseColors[2], baseColors[3], rnd.nextInt(100) / 100));
     }
   }
 
@@ -100,16 +107,30 @@ class _AnalogClockState extends State<AnalogClock> {
 
       final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
       final lastMidnight = new DateTime(_now.year, _now.month, _now.day);
-      final nextMidnight =  new DateTime(_now.year, _now.month, _now.day,23,59);
+      final nextMidnight =
+          new DateTime(_now.year, _now.month, _now.day, 23, 59);
       final List<Event> events = new List();
-      for(Calendar c in calendarsResult?.data){
-
-        var result = await _deviceCalendarPlugin.retrieveEvents(c.id, RetrieveEventsParams(startDate:lastMidnight,endDate: nextMidnight ));
+      for (Calendar c in calendarsResult?.data) {
+        var result = await _deviceCalendarPlugin.retrieveEvents(
+            c.id,
+            RetrieveEventsParams(
+                startDate: lastMidnight, endDate: nextMidnight));
         events.addAll(result?.data);
       }
+
+      final terminArray = <Termin>[];
+      if (events != null) {
+        for (Event e in events) {
+          if (e != null && !e.allDay) {
+            terminArray.add(Termin(e.start, e.end, e.title, e.eventId));
+          }
+        }
+      }
+
+      terminArray.sort();
       setState(() {
-        _events = events;
-        _calenderFetcher = new Timer(calendarRefreshTime,_retrieveCalendars);
+        _terminArray = terminArray;
+        _calenderFetcher = new Timer(calendarRefreshTime, _retrieveCalendars);
       });
     } on PlatformException catch (e) {
       print(e);
@@ -146,8 +167,8 @@ class _AnalogClockState extends State<AnalogClock> {
     });
   }
 
-  Color pickColor(String id){
-    return _eventColors[id.hashCode%_eventColors.length];
+  Color pickColor(String id) {
+    return _eventColors[id.hashCode % _eventColors.length];
   }
 
   @override
@@ -175,12 +196,11 @@ class _AnalogClockState extends State<AnalogClock> {
             highlightColor: Color(0xFF4285F4),
             accentColor: Color(0xFF8AB4F8),
             backgroundColor: Color(0xFF3C4043),
-
           );
 
     final time = DateFormat.Hms().format(DateTime.now());
     final weatherInfo = DefaultTextStyle(
-      style: TextStyle(color: customTheme.primaryColor,fontSize: 24),
+      style: TextStyle(color: customTheme.primaryColor, fontSize: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -189,136 +209,132 @@ class _AnalogClockState extends State<AnalogClock> {
       ),
     );
 
-    final lastMidnight = new DateTime(_now.year, _now.month, _now.day,0,0);
-    final lastHour = new DateTime(_now.year, _now.month, _now.day, _now.hour);
-    final nextHour = lastHour.add(Duration(hours: 1));
-
-    final terminArray = <Termin>[];
-    if(_events != null) {
-      for (Event e in _events) {
-        if(e != null && !e.allDay) {
-          terminArray.add(Termin(e.start, e.end, e.title,e.eventId));
-        }
-      }
-    }
-
-    terminArray.sort();
-
     final clockFace = <Widget>[];
-
-    var start,end;
-    if (_now.hour < 12) {
-      start = lastMidnight;
-      end = lastMidnight.add(Duration(hours: 12));
-    } else {
-      start = lastMidnight.add(Duration(hours: 12));
-      end = lastMidnight.add(Duration(days: 1));
-    }
-
-    final eventsToShow = terminArray.where((t) => t.includedIn(start,end));
-    clockFace.add(ClockFace(primaryColor: customTheme.primaryColor,secondaryColor: customTheme.accentColor,thickness: 1,));
-
-    //outer ring
-    for (Termin t in eventsToShow) {
-      clockFace.add(Scheibe(
-        color: pickColor(t.id),
-        scale: 0.88,
-        thickness: 0.05,
-        angleRadians: math.max(0,t.lengthIn(start, end).inMinutes)*radiansPerSecond,
-        angleStart:
-           t.getRelativeStart(start).hour*radiansPerHour + t.getRelativeStart(start).minute * radiansPerSecond,
-        text: t.title, ));
-    }
-
-    clockFace.add(Scheibe(
-      color: customTheme.backgroundColor,
-      scale: 0.82,
-      thickness: 2,
-      angleRadians: 2 * math.pi,
-      angleStart: 0,
+    clockFace.add(ClockFace(
+      primaryColor: customTheme.primaryColor,
+      secondaryColor: customTheme.accentColor,
+      thickness: 1,
     ));
 
-    final minuteDates = terminArray.where(
-        (t) => t.includedIn(lastHour, lastHour.add(Duration(minutes: 59,seconds: 59))));
+    if (_terminArray != null) {
+      final lastMidnight = new DateTime(_now.year, _now.month, _now.day, 0, 0);
+      final lastHour = new DateTime(_now.year, _now.month, _now.day, _now.hour);
+      final nextHour = lastHour.add(Duration(hours: 1));
 
-    //inner ring
-    for (Termin t in minuteDates) {
+      var start, end;
+      if (_now.hour < 12) {
+        start = lastMidnight;
+        end = lastMidnight.add(Duration(hours: 12));
+      } else {
+        start = lastMidnight.add(Duration(hours: 12));
+        end = lastMidnight.add(Duration(days: 1));
+      }
+
+      final eventsToShow = _terminArray.where((t) => t.includedIn(start, end));
+
+      //outer ring
+      for (Termin t in eventsToShow) {
+        clockFace.add(Scheibe(
+          color: pickColor(t.id),
+          scale: 0.88,
+          thickness: 0.05,
+          angleRadians:
+              math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
+          angleStart: t.getRelativeStart(start).hour * radiansPerHour +
+              t.getRelativeStart(start).minute * radiansPerSecond,
+          text: t.title,
+        ));
+      }
+
       clockFace.add(Scheibe(
-        color: pickColor(t.id),
-        scale: 0.825,
-        thickness: 0.05,
-        angleRadians: t.lengthIn(lastHour,nextHour).inMinutes*radiansPerTick,
-        angleStart:
-          t.getRelativeStart(lastHour).minute * radiansPerTick,
-        text: t.title,
-      ));
-    }
-    if(!widget.model.pieMode){
-      clockFace.add(Scheibe(
-      color: customTheme.backgroundColor,
-      scale: 0.77,
-      thickness: 2,
-      angleRadians: 2 * math.pi,
-      angleStart: 0,
-    ));
-    }
-
-
-    clockFace.addAll([
-      DrawnHand(
-        //hour
-        color: customTheme.primaryColor,
-        size: 0.6,
-        thickness: 16,
-        angleRadians:
-        _now.hour * radiansPerHour + (_now.minute / 60) * radiansPerHour,
-      ),
-      DrawnHand(
-        //minutes
-        color: customTheme.highlightColor,
-        thickness: 16,
-        size: 0.85,
-        angleRadians: _now.minute * radiansPerTick,
-      ),
-      DrawnHand(
-        //seconds
-        color: customTheme.accentColor,
-        thickness: 4,
-        size: 0.95,
-        angleRadians: _now.second * radiansPerTick,
-      ),
-      Scheibe(
-        color: customTheme.primaryColor,
-        scale: 0.04,
+        color: customTheme.backgroundColor,
+        scale: 0.82,
         thickness: 2,
         angleRadians: 2 * math.pi,
         angleStart: 0,
-      ),
-      Positioned(
-        //added info
-        left: 0,
-        bottom: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: weatherInfo,
-        ),
-      ),
-    ]);
+      ));
+
+      final minuteDates = _terminArray.where((t) => t.includedIn(
+          lastHour, lastHour.add(Duration(minutes: 59, seconds: 59))));
+
+      //inner ring
+      for (Termin t in minuteDates) {
+        clockFace.add(Scheibe(
+          color: pickColor(t.id),
+          scale: 0.825,
+          thickness: 0.05,
+          angleRadians:
+              t.lengthIn(lastHour, nextHour).inMinutes * radiansPerTick,
+          angleStart: t.getRelativeStart(lastHour).minute * radiansPerTick,
+          text: t.title,
+        ));
+      }
+      if (!widget.model.pieMode) {
+        clockFace.add(Scheibe(
+          color: customTheme.backgroundColor,
+          scale: 0.77,
+          thickness: 2,
+          angleRadians: 2 * math.pi,
+          angleStart: 0,
+        ));
+      }
+    }
 
     return Semantics.fromProperties(
-      properties: SemanticsProperties(
-        label: 'Analog clock with time $time',
-        value: time,
-      ),
-      child: Container(
-        color: customTheme.backgroundColor,
-        child: Container(
-          padding: EdgeInsets.all(15),
-          child: Stack(
-            children: clockFace,
-          ),
+        properties: SemanticsProperties(
+          label: 'Analog clock with time $time',
+          value: time,
         ),
-      ),
-    );
+        child: Container(
+          color: customTheme.backgroundColor,
+          child: Container(
+            padding: EdgeInsets.all(15),
+            child: Stack(
+              children: [
+                Stack(
+                  children: clockFace,
+                ),
+                DrawnHand(
+                  //hour
+                  color: customTheme.primaryColor,
+                  size: 0.6,
+                  thickness: 16,
+                  angleRadians:
+                  _now.hour * radiansPerHour + (_now.minute / 60) * radiansPerHour,
+                ),
+                DrawnHand(
+                  //minutes
+                  color: customTheme.highlightColor,
+                  thickness: 16,
+                  size: 0.85,
+                  angleRadians: _now.minute * radiansPerTick,
+                ),
+                DrawnHand(
+                  //seconds
+                  color: customTheme.accentColor,
+                  thickness: 4,
+                  size: 0.95,
+                  angleRadians: _now.second * radiansPerTick,
+                ),
+                Scheibe(
+                  color: customTheme.primaryColor,
+                  scale: 0.04,
+                  thickness: 2,
+                  angleRadians: 2 * math.pi,
+                  angleStart: 0,
+                ),
+                Positioned(
+                  //added info
+                  left: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: weatherInfo,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ));
   }
 }

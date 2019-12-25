@@ -44,7 +44,8 @@ class _ClockFacePainter extends CustomPainter {
 
   _ClockFacePainter({
     @required this.primary, this.secondary,
-  })  : assert(primary != null) {
+  })  : assert(primary != null), super(){
+
     primaryPaint = Paint()
       ..color = primary.withOpacity(0.8)
       ..strokeCap = StrokeCap.square;
