@@ -9,14 +9,12 @@ import 'package:analog_clock/clock_face.dart';
 import 'package:analog_clock/scheibe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-import 'package:flutter_clock_helper/model.dart';
+import 'model.dart';
 import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 import 'package:device_calendar/device_calendar.dart';
-import 'container_hand.dart';
 import 'drawn_hand.dart';
 import 'termin.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/services.dart';
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
@@ -214,27 +212,27 @@ class _AnalogClockState extends State<AnalogClock> {
       end = lastMidnight.add(Duration(hours: 12));
     } else {
       start = lastMidnight.add(Duration(hours: 12));
-      end = lastMidnight.add(Duration(hours: 23, minutes: 59,seconds: 59));
+      end = lastMidnight.add(Duration(days: 1));
     }
 
     final eventsToShow = terminArray.where((t) => t.includedIn(start,end));
+    clockFace.add(ClockFace(primaryColor: customTheme.primaryColor,secondaryColor: customTheme.accentColor,thickness: 1,));
 
     //outer ring
     for (Termin t in eventsToShow) {
       clockFace.add(Scheibe(
         color: pickColor(t.id),
-        scale: 1,
+        scale: 0.88,
         thickness: 0.05,
         angleRadians: math.max(0,t.lengthIn(start, end).inMinutes)*radiansPerSecond,
         angleStart:
            t.getRelativeStart(start).hour*radiansPerHour + t.getRelativeStart(start).minute * radiansPerSecond,
-        text: t.title,
-      ));
+        text: t.title, ));
     }
 
     clockFace.add(Scheibe(
       color: customTheme.backgroundColor,
-      scale: 0.94,
+      scale: 0.82,
       thickness: 2,
       angleRadians: 2 * math.pi,
       angleStart: 0,
@@ -246,8 +244,8 @@ class _AnalogClockState extends State<AnalogClock> {
     //inner ring
     for (Termin t in minuteDates) {
       clockFace.add(Scheibe(
-        color: pickColor(t.id).withOpacity(0.7),
-        scale: 0.94,
+        color: pickColor(t.id),
+        scale: 0.825,
         thickness: 0.05,
         angleRadians: t.lengthIn(lastHour,nextHour).inMinutes*radiansPerTick,
         angleStart:
@@ -255,47 +253,39 @@ class _AnalogClockState extends State<AnalogClock> {
         text: t.title,
       ));
     }
-    clockFace.add(ClockFace(primaryColor: customTheme.primaryColor,secondaryColor: customTheme.accentColor,thickness: 1,));
-//    clockFace.add(Scheibe(
-//      color: customTheme.backgroundColor,
-//      size: 0.90,
-//      thickness: 2,
-//      angleRadians: 2 * math.pi,
-//      angleStart: 0,
-//    ));
+    if(!widget.model.pieMode){
+      clockFace.add(Scheibe(
+      color: customTheme.backgroundColor,
+      scale: 0.77,
+      thickness: 2,
+      angleRadians: 2 * math.pi,
+      angleStart: 0,
+    ));
+    }
+
 
     clockFace.addAll([
       DrawnHand(
-        //seconds
-        color: customTheme.accentColor,
-        thickness: 4,
-        size: 1,
-        angleRadians: _now.second * radiansPerTick,
+        //hour
+        color: customTheme.primaryColor,
+        size: 0.6,
+        thickness: 16,
+        angleRadians:
+        _now.hour * radiansPerHour + (_now.minute / 60) * radiansPerHour,
       ),
       DrawnHand(
         //minutes
         color: customTheme.highlightColor,
         thickness: 16,
-        size: 0.9,
+        size: 0.85,
         angleRadians: _now.minute * radiansPerTick,
       ),
-      // Example of a hand drawn with [Container].
-      ContainerHand(
-        //hour
-        color: Colors.transparent,
-        size: 0.5,
-        angleRadians:
-            _now.hour * radiansPerHour + (_now.minute / 60) * radiansPerHour,
-        child: Transform.translate(
-          offset: Offset(0.0, -60.0),
-          child: Container(
-            width: 32,
-            height: 150,
-            decoration: BoxDecoration(
-              color: customTheme.primaryColor,
-            ),
-          ),
-        ),
+      DrawnHand(
+        //seconds
+        color: customTheme.accentColor,
+        thickness: 4,
+        size: 0.95,
+        angleRadians: _now.second * radiansPerTick,
       ),
       Scheibe(
         color: customTheme.primaryColor,

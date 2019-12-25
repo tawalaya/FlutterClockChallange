@@ -13,6 +13,16 @@ import 'package:flutter/material.dart';
 ///
 /// Contestants: Do not edit this.
 class ClockModel extends ChangeNotifier {
+
+  bool _pieMode = true;
+  get pieMode => _pieMode;
+  set pieMode(bool pieMode) {
+    if (_pieMode != pieMode) {
+      _pieMode = pieMode;
+      notifyListeners();
+    }
+  }
+
   get is24HourFormat => _is24HourFormat;
   bool _is24HourFormat = true;
   set is24HourFormat(bool is24HourFormat) {

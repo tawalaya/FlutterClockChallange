@@ -5,6 +5,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 
 import 'hand.dart';
 
@@ -78,12 +79,19 @@ class _HandPainter extends CustomPainter {
     final angle = angleRadians - math.pi / 2.0;
     final length = size.shortestSide * 0.5 * handSize;
     final position = center + Offset(math.cos(angle), math.sin(angle)) * length;
+    final start = (center +
+        Offset(math.cos(angle), math.sin(angle)) * (size.shortestSide) *0.5*0.07)
+        +Offset(math.cos(angle), math.sin(angle)) * 0.5*lineWidth;
     final linePaint = Paint()
       ..color = color
       ..strokeWidth = lineWidth
-      ..strokeCap = StrokeCap.square;
+      ..strokeCap = StrokeCap.round;
 
-    canvas.drawLine(center, position, linePaint);
+    final shadow = Paint()..color=Color.fromRGBO(0, 0, 0, 1)..strokeWidth = lineWidth..strokeCap = StrokeCap.round..blendMode=BlendMode.softLight;
+
+    canvas.drawLine(start+Offset(2,2), position+Offset(2*0.9,2*0.9),shadow );
+    canvas.drawLine(start, position, linePaint);
+    
   }
 
   @override

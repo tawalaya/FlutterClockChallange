@@ -133,6 +133,11 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
                     _model.is24HourFormat = value;
                   });
                 }),
+                _switch('PieMode', _model.pieMode, (bool value) {
+                  setState(() {
+                    _model.pieMode = value;
+                  });
+                }),
                 _enumMenu(
                     'Weather', _model.weatherCondition, WeatherCondition.values,
                     (WeatherCondition condition) {

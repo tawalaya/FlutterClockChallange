@@ -4,6 +4,7 @@
 
 import 'dart:developer';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
@@ -118,6 +119,7 @@ class _ScheibenPainter extends CustomPainter {
 
       final textGabWith = _textPainter.width;
       canvas.save();
+
       _paint_text(canvas, size, textGabWith);
       canvas.restore();
     }
@@ -126,6 +128,7 @@ class _ScheibenPainter extends CustomPainter {
   void _paint_text(Canvas canvas, Size size, double textGabWidth) {
     final radius = size.shortestSide * scale * 0.5;
     canvas.translate(size.width / 2, size.height / 2 - radius);
+    angleStart = angleStart%radians(360);
 
     //offset from start of bonding box
     angleStart += tickSize;
@@ -164,6 +167,7 @@ class _ScheibenPainter extends CustomPainter {
   double _drawLetter(
       Canvas canvas, String letter, double prevAngle, double radius) {
     _textPainter.text = TextSpan(text: letter, style: textStyle);
+    _textPainter.textDirection = TextDirection.ltr;
     _textPainter.layout(
       minWidth: 0,
       maxWidth: double.maxFinite,
@@ -174,8 +178,10 @@ class _ScheibenPainter extends CustomPainter {
 
     final newAngle = _calculateRotationAngle(prevAngle, alpha);
     canvas.rotate(newAngle);
-
+//    canvas.save();
+//    canvas.scale(1,-1);
     _textPainter.paint(canvas, Offset.zero);
+//    canvas.restore();
     canvas.translate(d, 0);
 
     return alpha;
