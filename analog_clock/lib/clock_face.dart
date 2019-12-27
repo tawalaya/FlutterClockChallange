@@ -41,6 +41,7 @@ class ClockFace extends StatelessWidget {
 class _ClockFacePainter extends CustomPainter {
   Paint primaryPaint;
   Paint secondaryPaint;
+  Paint thirdPaint;
 
   _ClockFacePainter({
     @required this.primary, this.secondary,
@@ -48,10 +49,17 @@ class _ClockFacePainter extends CustomPainter {
 
     primaryPaint = Paint()
       ..color = primary.withOpacity(0.8)
-      ..strokeCap = StrokeCap.square;
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    thirdPaint = Paint()
+      ..color = primary.withOpacity(0.8)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
 
     secondaryPaint = Paint()
       ..color = secondary.withOpacity(0.8)
+      ..strokeWidth = 1
       ..strokeCap = StrokeCap.square;
   }
 
@@ -66,21 +74,16 @@ class _ClockFacePainter extends CustomPainter {
     final xOffset = drawSize.longestSide / 2 ;
     final yOffset = drawSize.shortestSide / 2 ;
 
-
-
-
-
     canvas.save();
     canvas.translate(xOffset, yOffset);
     for(int i = 0;i<60;i+=1) {
 
-    if(i%5 == 0){
-      canvas.drawCircle(Offset(boxSize-boxSize*0.06, 0),boxSize*0.035,primaryPaint);
+    if(i%15 == 0) {
+      canvas.drawLine(Offset(boxSize-12, 0), Offset(boxSize, 0), thirdPaint);
+    } else if(i%5 == 0){
+      canvas.drawLine(Offset(boxSize-10, 0), Offset(boxSize, 0), primaryPaint);
     } else {
-      canvas.drawRect(Rect.fromCenter(
-          center: Offset(boxSize - boxSize * 0.06, 0),
-          width: boxSize * 0.05,
-          height: 3), secondaryPaint);
+      canvas.drawLine(Offset(boxSize-5, 0), Offset(boxSize, 0), secondaryPaint);
     }
       canvas.rotate(tickSize);
     }

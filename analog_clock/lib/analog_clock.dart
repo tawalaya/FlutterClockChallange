@@ -65,14 +65,16 @@ class _AnalogClockState extends State<AnalogClock> {
       Color.fromRGBO(244, 160, 0, 1),
       Color.fromRGBO(15, 157, 88, 1)
     ];
-    for (int i = 0; i < 8; i++) {
-      _eventColors.add(
-          Color.lerp(baseColors[0], baseColors[1], rnd.nextInt(100) / 100));
-      _eventColors.add(
-          Color.lerp(baseColors[1], baseColors[2], rnd.nextInt(100) / 100));
-      _eventColors.add(
-          Color.lerp(baseColors[2], baseColors[3], rnd.nextInt(100) / 100));
-    }
+    _eventColors.add(Color(0xFF6A6AFF));
+    _eventColors.add(Color(0xFF3DE4FC));
+    _eventColors.add(Color(0xFF33FDC0));
+    _eventColors.add(Color(0xFF4AE371));
+    _eventColors.add(Color(0xFFDFE32D));
+    _eventColors.add(Color(0xFFFFCB2F));
+    _eventColors.add(Color(0xFFFFAC62));
+    _eventColors.add(Color(0xFFC87C5B));
+    _eventColors.add(Color(0xFFFF7373));
+    _eventColors.add(Color(0xFFCB59E8));
   }
 
   @override
@@ -184,18 +186,18 @@ class _AnalogClockState extends State<AnalogClock> {
     final customTheme = Theme.of(context).brightness == Brightness.light
         ? Theme.of(context).copyWith(
             // Hour hand.
-            primaryColor: Color(0xFF4285F4),
+            primaryColor: Color(0xFF383838),
             // Minute hand.
-            highlightColor: Color(0xFF8AB4F8),
+            highlightColor: Color(0xFF4d4d4d),
             // Second hand.
-            accentColor: Color(0xFF669DF6),
-            backgroundColor: Color(0xFFD2E3FC),
+            accentColor: Color(0xFF6b6b6b),
+            backgroundColor: Color(0xFFF1F1F1),
           )
         : Theme.of(context).copyWith(
-            primaryColor: Color(0xFFD2E3FC),
-            highlightColor: Color(0xFF4285F4),
-            accentColor: Color(0xFF8AB4F8),
-            backgroundColor: Color(0xFF3C4043),
+            primaryColor: Color(0xFFF8F8F8),
+            highlightColor: Color(0xFFEEEEEE),
+            accentColor: Color(0xFFCCCCCC),
+            backgroundColor: Color(0xFF3b3b3b),
           );
 
     final time = DateFormat.Hms().format(DateTime.now());
@@ -298,22 +300,22 @@ class _AnalogClockState extends State<AnalogClock> {
                   //hour
                   color: customTheme.primaryColor,
                   size: 0.6,
-                  thickness: 16,
+                  thickness: 8,
                   angleRadians:
                   _now.hour * radiansPerHour + (_now.minute / 60) * radiansPerHour,
                 ),
                 DrawnHand(
                   //minutes
                   color: customTheme.highlightColor,
-                  thickness: 16,
+                  thickness: 6,
                   size: 0.85,
                   angleRadians: _now.minute * radiansPerTick,
                 ),
                 DrawnHand(
                   //seconds
                   color: customTheme.accentColor,
-                  thickness: 4,
-                  size: 0.95,
+                  thickness: 2,
+                  size: 1,
                   angleRadians: _now.second * radiansPerTick,
                 ),
                 Scheibe(
@@ -328,7 +330,7 @@ class _AnalogClockState extends State<AnalogClock> {
                   left: 0,
                   bottom: 0,
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(15),
                     child: weatherInfo,
                   ),
                 ),
