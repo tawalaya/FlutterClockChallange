@@ -2,8 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/material.dart';
+import 'dart:collection';
+import 'dart:developer';
 
+import 'package:device_calendar/device_calendar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'model.dart';
 
 /// Returns a clock [Widget] with [ClockModel].
@@ -42,10 +46,19 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
   ThemeMode _themeMode = ThemeMode.light;
   bool _configButtonShown = false;
 
+  List<Calendar> _calenderArray = new List();
+
+  DeviceCalendarPlugin _deviceCalendarPlugin;
+
+  _ClockCustomizerState(){
+    _deviceCalendarPlugin = DeviceCalendarPlugin();
+  }
+
   @override
   void initState() {
     super.initState();
     _model.addListener(_handleModelChange);
+    _retrieveCalendars();
   }
 
   @override
@@ -53,6 +66,33 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
     _model.removeListener(_handleModelChange);
     _model.dispose();
     super.dispose();
+  }
+
+  void _retrieveCalendars() async {
+    try {
+      var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
+      if (permissionsGranted.isSuccess && !permissionsGranted.data) {
+        permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
+        if (!permissionsGranted.isSuccess || !permissionsGranted.data) {
+          return;
+        }
+      }
+
+      await _deviceCalendarPlugin.retrieveCalendars().then(
+          (result)=>{
+            setState(() {
+            _calenderArray = result.data;
+            _model.calenderIds =  result.data.map((c)=>c.id).toList();
+            })
+          }
+      );
+
+
+
+
+    } on PlatformException catch (e) {
+      log("failed to get calender information",error:e);
+    }
   }
 
   void _handleModelChange() => setState(() {});
@@ -91,6 +131,18 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
     );
   }
 
+  Widget _calendar_switch(String label, bool value, ValueChanged<bool> onChanged) {
+    return Row(
+      children: <Widget>[
+        Expanded(child: Text(label)),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
   Widget _textField(
       String currentValue, String label, ValueChanged<Null> onChanged) {
     return TextField(
@@ -110,17 +162,6 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
-                _textField(_model.location, 'Location', (String location) {
-                  setState(() {
-                    _model.location = location;
-                  });
-                }),
-                _textField(_model.temperature.toString(), 'Temperature',
-                    (String temperature) {
-                  setState(() {
-                    _model.temperature = double.parse(temperature);
-                  });
-                }),
                 _enumMenu('Theme', _themeMode,
                     ThemeMode.values.toList()..remove(ThemeMode.system),
                     (ThemeMode mode) {
@@ -128,29 +169,12 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
                     _themeMode = mode;
                   });
                 }),
-                _switch('24-hour format', _model.is24HourFormat, (bool value) {
-                  setState(() {
-                    _model.is24HourFormat = value;
-                  });
-                }),
                 _switch('PieMode', _model.pieMode, (bool value) {
                   setState(() {
                     _model.pieMode = value;
                   });
                 }),
-                _enumMenu(
-                    'Weather', _model.weatherCondition, WeatherCondition.values,
-                    (WeatherCondition condition) {
-                  setState(() {
-                    _model.weatherCondition = condition;
-                  });
-                }),
-                _enumMenu('Units', _model.unit, TemperatureUnit.values,
-                    (TemperatureUnit unit) {
-                  setState(() {
-                    _model.unit = unit;
-                  });
-                }),
+                ..._switchMenu('Calenders'),
               ],
             ),
           ),
@@ -227,5 +251,30 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
         ),
       ),
     );
+  }
+
+  _switchMenu(String label) {
+    final List<Widget> widgets = new List();
+
+    for(Calendar c in _calenderArray){
+      widgets.add(_calendar_switch(c.name, _model.isActive(c.id), (bool value){
+        setState(() {
+          if(value) {
+            _model.add(c.id);
+          } else {
+            _model.remove(c.id);
+          }
+        });
+      }));
+    }
+
+    return {
+        Row(
+        children: <Widget>[
+          Expanded(child: Text(label)),
+        ],
+      ),
+      ...widgets
+    };
   }
 }

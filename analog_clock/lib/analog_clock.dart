@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:developer';
 import 'dart:math' as math;
 
 import 'package:analog_clock/clock_face.dart';
@@ -26,7 +27,7 @@ final radiansPerHour = radians(360 / 12);
 
 final radiansPerSecond = radians(360 / 12 / 60);
 
-final calendarRefreshTime = Duration(seconds: 15);
+final calendarRefreshTime =  Duration(seconds: 15);
 
 /// A basic analog clock.
 ///
@@ -45,10 +46,6 @@ class _AnalogClockState extends State<AnalogClock> {
   List<Termin> _terminArray;
 
   var _now = DateTime.now();
-  var _temperature = '';
-  var _temperatureRange = '';
-  var _condition = '';
-  var _location = '';
   Timer _timer;
   Timer _calenderFetcher;
 
@@ -107,14 +104,13 @@ class _AnalogClockState extends State<AnalogClock> {
         }
       }
 
-      final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
       final lastMidnight = new DateTime(_now.year, _now.month, _now.day);
       final nextMidnight =
           new DateTime(_now.year, _now.month, _now.day, 23, 59);
       final List<Event> events = new List();
-      for (Calendar c in calendarsResult?.data) {
+      for (String id in widget.model.calenderIds) {
         var result = await _deviceCalendarPlugin.retrieveEvents(
-            c.id,
+            id,
             RetrieveEventsParams(
                 startDate: lastMidnight, endDate: nextMidnight));
         events.addAll(result?.data);
@@ -135,7 +131,7 @@ class _AnalogClockState extends State<AnalogClock> {
         _calenderFetcher = new Timer(calendarRefreshTime, _retrieveCalendars);
       });
     } on PlatformException catch (e) {
-      print(e);
+      log("failed to fetch events",error: e);
     }
   }
 
@@ -149,12 +145,7 @@ class _AnalogClockState extends State<AnalogClock> {
   }
 
   void _updateModel() {
-    setState(() {
-      _temperature = widget.model.temperatureString;
-      _temperatureRange = '(${widget.model.low} - ${widget.model.highString})';
-      _condition = widget.model.weatherString;
-      _location = widget.model.location;
-    });
+    _retrieveCalendars();
   }
 
   void _updateTime() {
@@ -201,8 +192,9 @@ class _AnalogClockState extends State<AnalogClock> {
           );
 
     final time = DateFormat.Hms().format(DateTime.now());
-    final weatherInfo = DefaultTextStyle(
-      style: TextStyle(color: customTheme.primaryColor, fontSize: 24),
+    double width = MediaQuery.of(context).size.width;
+    final infoText = DefaultTextStyle(
+      style: TextStyle(color: customTheme.primaryColor, fontSize: width * 0.02),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -331,7 +323,7 @@ class _AnalogClockState extends State<AnalogClock> {
                   bottom: 0,
                   child: Padding(
                     padding: const EdgeInsets.all(15),
-                    child: weatherInfo,
+                    child: infoText,
                   ),
                 ),
               ],
