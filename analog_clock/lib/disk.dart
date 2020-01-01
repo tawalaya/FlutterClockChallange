@@ -18,11 +18,11 @@ final tickSize = radians(360 / 12 / 60);
 /// The hand's length scales based on the clock's size.
 /// This hand is used to build the second and minute hands, and demonstrates
 /// building a custom hand.
-class Scheibe extends Hand {
+class Disk extends Hand {
   /// Create a const clock [Hand].
   ///
   /// All of the parameters are required and must not be null.
-  const Scheibe({
+  const Disk({
     @required Color color,
     @required this.thickness,
     @required double scale,
@@ -49,7 +49,7 @@ class Scheibe extends Hand {
     return Center(
       child: SizedBox.expand(
         child: CustomPaint(
-          painter: _ScheibenPainter(
+          painter: _DiskPainter(
             scale: size,
             thickness: thickness,
             angleRadians: angleRadians,
@@ -64,8 +64,8 @@ class Scheibe extends Hand {
 }
 
 /// [CustomPainter] that draws a clock hand.
-class _ScheibenPainter extends CustomPainter {
-  _ScheibenPainter({
+class _DiskPainter extends CustomPainter {
+  _DiskPainter({
     @required this.scale,
     @required this.thickness,
     @required this.angleRadians,
@@ -100,8 +100,8 @@ class _ScheibenPainter extends CustomPainter {
     textStyle = TextStyle(color: Colors.black,fontSize:  fontSize);
     final xOffset = size.longestSide / 2 - boxSize / 2;
     final yOffset = size.shortestSide / 2 - boxSize / 2;
-    final scheibenOffset = Offset(xOffset, yOffset);
-    final getRect = (scheibenOffset & Size(boxSize, boxSize));
+    final diskOffset = Offset(xOffset, yOffset);
+    final getRect = (diskOffset & Size(boxSize, boxSize));
 
     final linePaint = Paint()
       ..color = color
@@ -191,7 +191,7 @@ class _ScheibenPainter extends CustomPainter {
       (alpha + prevAngle) / 2;
 
   @override
-  bool shouldRepaint(_ScheibenPainter oldDelegate) {
+  bool shouldRepaint(_DiskPainter oldDelegate) {
     return oldDelegate.scale != scale ||
         oldDelegate.thickness != thickness ||
         oldDelegate.angleRadians != angleRadians ||

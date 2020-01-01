@@ -6,8 +6,9 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:math' as math;
 
+import 'package:analog_clock/arc.dart';
 import 'package:analog_clock/clock_face.dart';
-import 'package:analog_clock/scheibe.dart';
+import 'package:analog_clock/disk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'model.dart';
@@ -43,7 +44,7 @@ class AnalogClock extends StatefulWidget {
 
 class _AnalogClockState extends State<AnalogClock> {
   DeviceCalendarPlugin _deviceCalendarPlugin;
-  List<Termin> _terminArray;
+  List<Termin> _eventArray;
 
   var _now = DateTime.now();
   Timer _timer;
@@ -55,13 +56,6 @@ class _AnalogClockState extends State<AnalogClock> {
     _deviceCalendarPlugin = DeviceCalendarPlugin();
 
     //XXX fix me generate some nice colors for a few events
-    final rnd = new math.Random();
-    var baseColors = [
-      Color.fromRGBO(66, 133, 244, 1),
-      Color.fromRGBO(219, 68, 55, 1),
-      Color.fromRGBO(244, 160, 0, 1),
-      Color.fromRGBO(15, 157, 88, 1)
-    ];
     _eventColors.add(Color(0xFF6A6AFF));
     _eventColors.add(Color(0xFF3DE4FC));
     _eventColors.add(Color(0xFF33FDC0));
@@ -116,18 +110,18 @@ class _AnalogClockState extends State<AnalogClock> {
         events.addAll(result?.data);
       }
 
-      final terminArray = <Termin>[];
+      final eventArray = <Termin>[];
       if (events != null) {
         for (Event e in events) {
           if (e != null && !e.allDay) {
-            terminArray.add(Termin(e.start, e.end, e.title, e.eventId));
+            eventArray.add(Termin(e.start, e.end, e.title, e.eventId));
           }
         }
       }
 
-      terminArray.sort();
+      eventArray.sort();
       setState(() {
-        _terminArray = terminArray;
+        _eventArray = eventArray;
         _calenderFetcher = new Timer(calendarRefreshTime, _retrieveCalendars);
       });
     } on PlatformException catch (e) {
@@ -210,7 +204,7 @@ class _AnalogClockState extends State<AnalogClock> {
       thickness: 1,
     ));
 
-    if (_terminArray != null) {
+    if (_eventArray != null) {
       final lastMidnight = new DateTime(_now.year, _now.month, _now.day, 0, 0);
       final lastHour = new DateTime(_now.year, _now.month, _now.day, _now.hour);
       final nextHour = lastHour.add(Duration(hours: 1));
@@ -224,23 +218,23 @@ class _AnalogClockState extends State<AnalogClock> {
         end = lastMidnight.add(Duration(days: 1));
       }
 
-      final eventsToShow = _terminArray.where((t) => t.includedIn(start, end));
+      final eventsToShow = _eventArray.where((t) => t.includedIn(start, end));
 
       //outer ring
       for (Termin t in eventsToShow) {
-        clockFace.add(Scheibe(
-          color: pickColor(t.id),
-          scale: 0.88,
+        clockFace.add(Arc(
+          color: pickColor(t.id+"1"),
+          scale: 0.92,
           thickness: 0.05,
           angleRadians:
-              math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
+          math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
           angleStart: t.getRelativeStart(start).hour * radiansPerHour +
               t.getRelativeStart(start).minute * radiansPerSecond,
           text: t.title,
         ));
       }
 
-      clockFace.add(Scheibe(
+      clockFace.add(Disk(
         color: customTheme.backgroundColor,
         scale: 0.82,
         thickness: 2,
@@ -248,23 +242,23 @@ class _AnalogClockState extends State<AnalogClock> {
         angleStart: 0,
       ));
 
-      final minuteDates = _terminArray.where((t) => t.includedIn(
+      final minuteDates = _eventArray.where((t) => t.includedIn(
           lastHour, lastHour.add(Duration(minutes: 59, seconds: 59))));
 
       //inner ring
       for (Termin t in minuteDates) {
-        clockFace.add(Scheibe(
-          color: pickColor(t.id),
-          scale: 0.825,
+        clockFace.add(Arc(
+          color: pickColor(t.id+"1"),
+          scale: 0.855,
           thickness: 0.05,
           angleRadians:
-              t.lengthIn(lastHour, nextHour).inMinutes * radiansPerTick,
+          t.lengthIn(lastHour, nextHour).inMinutes * radiansPerTick,
           angleStart: t.getRelativeStart(lastHour).minute * radiansPerTick,
           text: t.title,
         ));
       }
       if (!widget.model.pieMode) {
-        clockFace.add(Scheibe(
+        clockFace.add(Disk(
           color: customTheme.backgroundColor,
           scale: 0.77,
           thickness: 2,
@@ -292,7 +286,7 @@ class _AnalogClockState extends State<AnalogClock> {
                   //hour
                   color: customTheme.primaryColor,
                   size: 0.6,
-                  thickness: 8,
+                  thickness: 6,
                   angleRadians:
                   _now.hour * radiansPerHour + (_now.minute / 60) * radiansPerHour,
                 ),
@@ -307,10 +301,10 @@ class _AnalogClockState extends State<AnalogClock> {
                   //seconds
                   color: customTheme.accentColor,
                   thickness: 2,
-                  size: 1,
+                  size: 0.95,
                   angleRadians: _now.second * radiansPerTick,
                 ),
-                Scheibe(
+                Disk(
                   color: customTheme.primaryColor,
                   scale: 0.04,
                   thickness: 2,

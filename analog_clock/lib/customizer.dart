@@ -169,11 +169,13 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
                     _themeMode = mode;
                   });
                 }),
+                /*
                 _switch('PieMode', _model.pieMode, (bool value) {
                   setState(() {
                     _model.pieMode = value;
                   });
                 }),
+                 */
                 ..._switchMenu('Calenders'),
               ],
             ),
