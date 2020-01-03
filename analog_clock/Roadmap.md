@@ -8,9 +8,9 @@ Based on: https://flutter.dev/clock#submissions
 
     [x] Google API binding
     [x] Nettes Interface für time-slices
-    [ ] Better Styleing
+    [x] Better Styleing
     [ ] First usage flow
-    [ ] How to get Event Colors?
+    [x] How to get Event Colors?
     [ ] Anderes Layout?
     [x] Refresh events periodicly
     [ ] optimize render, events do not need to be created for every draw?

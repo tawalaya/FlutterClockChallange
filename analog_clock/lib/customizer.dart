@@ -176,6 +176,14 @@ class _ClockCustomizerState extends State<ClockCustomizer> {
                   });
                 }),
                  */
+                _switch('Show All Day Events', _model.allDay, (bool value) {
+                  setState(() {
+                    _model.allDay = value;
+                  });
+                }),
+                Divider(
+                  thickness: 2.0,
+                ),
                 ..._switchMenu('Calenders'),
               ],
             ),

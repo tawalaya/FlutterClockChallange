@@ -27,8 +27,8 @@ final radiansPerTick = radians(360 / 60);
 final radiansPerHour = radians(360 / 12);
 
 final radiansPerSecond = radians(360 / 12 / 60);
-
-final calendarRefreshTime =  Duration(seconds: 15);
+//TODO: increase for production
+final calendarRefreshTime = Duration(seconds: 15);
 
 /// A basic analog clock.
 ///
@@ -99,8 +99,7 @@ class _AnalogClockState extends State<AnalogClock> {
       }
 
       final lastMidnight = new DateTime(_now.year, _now.month, _now.day);
-      final nextMidnight =
-          new DateTime(_now.year, _now.month, _now.day, 23, 59);
+      final nextMidnight = lastMidnight.add(Duration(days: 1));
       final List<Event> events = new List();
       for (String id in widget.model.calenderIds) {
         var result = await _deviceCalendarPlugin.retrieveEvents(
@@ -113,7 +112,7 @@ class _AnalogClockState extends State<AnalogClock> {
       final eventArray = <Termin>[];
       if (events != null) {
         for (Event e in events) {
-          if (e != null && !e.allDay) {
+          if (e != null) {
             eventArray.add(Termin(e.start, e.end, e.title, e.eventId));
           }
         }
@@ -125,7 +124,7 @@ class _AnalogClockState extends State<AnalogClock> {
         _calenderFetcher = new Timer(calendarRefreshTime, _retrieveCalendars);
       });
     } on PlatformException catch (e) {
-      log("failed to fetch events",error: e);
+      log("failed to fetch events", error: e);
     }
   }
 
@@ -160,6 +159,11 @@ class _AnalogClockState extends State<AnalogClock> {
 
   @override
   Widget build(BuildContext context) {
+    final  screenWidth = MediaQuery.of(context).size.width;
+    final  screenHeight = MediaQuery.of(context).size.height;
+
+    final fontScale = (screenHeight < (screenWidth)?screenHeight:screenWidth)*0.025;
+
     //XXX: optimize
     // There are many ways to apply themes to your clock. Some are:
     //  - Inherit the parent Theme (see ClockCustomizer in the
@@ -185,10 +189,12 @@ class _AnalogClockState extends State<AnalogClock> {
             backgroundColor: Color(0xFF3b3b3b),
           );
 
-    final time = DateFormat.Hms().format(DateTime.now());
-    double width = MediaQuery.of(context).size.width;
+    final time = DateFormat.Hms().format(_now);
+
+
+
     final infoText = DefaultTextStyle(
-      style: TextStyle(color: customTheme.primaryColor, fontSize: width * 0.02),
+      style: TextStyle(color: customTheme.primaryColor, fontSize: fontScale),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -218,16 +224,17 @@ class _AnalogClockState extends State<AnalogClock> {
         end = lastMidnight.add(Duration(days: 1));
       }
 
-      final eventsToShow = _eventArray.where((t) => t.includedIn(start, end));
+      final hourEvents = _eventArray
+          .where((t) => t.includedIn(start, end) && !t.isAllDayEvent);
 
       //outer ring
-      for (Termin t in eventsToShow) {
+      for (Termin t in hourEvents) {
         clockFace.add(Arc(
-          color: pickColor(t.id+"1"),
+          color: pickColor(t.id + "1"),
           scale: 0.92,
           thickness: 0.05,
           angleRadians:
-          math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
+              math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
           angleStart: t.getRelativeStart(start).hour * radiansPerHour +
               t.getRelativeStart(start).minute * radiansPerSecond,
           text: t.title,
@@ -242,17 +249,17 @@ class _AnalogClockState extends State<AnalogClock> {
         angleStart: 0,
       ));
 
-      final minuteDates = _eventArray.where((t) => t.includedIn(
-          lastHour, lastHour.add(Duration(minutes: 59, seconds: 59))));
+      final minuteEvents = _eventArray.where((t) => t.includedIn(
+          lastHour, lastHour.add(Duration(minutes: 59, seconds: 59))) && !t.isAllDayEvent);
 
       //inner ring
-      for (Termin t in minuteDates) {
+      for (Termin t in minuteEvents) {
         clockFace.add(Arc(
-          color: pickColor(t.id+"1"),
+          color: pickColor(t.id + "1"),
           scale: 0.855,
           thickness: 0.05,
           angleRadians:
-          t.lengthIn(lastHour, nextHour).inMinutes * radiansPerTick,
+              t.lengthIn(lastHour, nextHour).inMinutes * radiansPerTick,
           angleStart: t.getRelativeStart(lastHour).minute * radiansPerTick,
           text: t.title,
         ));
@@ -268,6 +275,8 @@ class _AnalogClockState extends State<AnalogClock> {
       }
     }
 
+    final allDayEvents = _eventArray?.where((t) => t.isAllDayEvent)?.toList();
+
     return Semantics.fromProperties(
         properties: SemanticsProperties(
           label: 'Analog clock with time $time',
@@ -275,54 +284,110 @@ class _AnalogClockState extends State<AnalogClock> {
         ),
         child: Container(
           color: customTheme.backgroundColor,
-          child: Container(
-            padding: EdgeInsets.all(15),
-            child: Stack(
-              children: [
-                Stack(
-                  children: clockFace,
-                ),
-                DrawnHand(
-                  //hour
-                  color: customTheme.primaryColor,
-                  size: 0.6,
-                  thickness: 6,
-                  angleRadians:
-                  _now.hour * radiansPerHour + (_now.minute / 60) * radiansPerHour,
-                ),
-                DrawnHand(
-                  //minutes
-                  color: customTheme.highlightColor,
-                  thickness: 6,
-                  size: 0.85,
-                  angleRadians: _now.minute * radiansPerTick,
-                ),
-                DrawnHand(
-                  //seconds
-                  color: customTheme.accentColor,
-                  thickness: 2,
-                  size: 0.95,
-                  angleRadians: _now.second * radiansPerTick,
-                ),
-                Disk(
-                  color: customTheme.primaryColor,
-                  scale: 0.04,
-                  thickness: 2,
-                  angleRadians: 2 * math.pi,
-                  angleStart: 0,
-                ),
-                Positioned(
-                  //added info
-                  left: 0,
-                  bottom: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.all(15),
-                    child: infoText,
+          child: Stack(children: [
+            Container(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(15),
+                  child: Stack(
+                    children: [
+                      Stack(
+                        children: clockFace,
+                      ),
+                      DrawnHand(
+                        //hour
+                        color: customTheme.primaryColor,
+                        size: 0.6,
+                        thickness: 6,
+                        angleRadians: _now.hour * radiansPerHour +
+                            (_now.minute / 60) * radiansPerHour,
+                      ),
+                      DrawnHand(
+                        //minutes
+                        color: customTheme.highlightColor,
+                        thickness: 6,
+                        size: 0.85,
+                        angleRadians: _now.minute * radiansPerTick,
+                      ),
+                      DrawnHand(
+                        //seconds
+                        color: customTheme.accentColor,
+                        thickness: 2,
+                        size: 0.95,
+                        angleRadians: _now.second * radiansPerTick,
+                      ),
+                      Disk(
+                        color: customTheme.primaryColor,
+                        scale: 0.04,
+                        thickness: 2,
+                        angleRadians: 2 * math.pi,
+                        angleStart: 0,
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Container(
+                  width: screenWidth*0.20,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: <Widget>[
+                        Expanded(
+                          child: Container(width: 0,height: 0,),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left:5,top: 10),
+                          child: infoText,
+                        ),
+                        (widget.model.allDay && allDayEvents != null)
+                            ? Column(children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: Text("All Day Events",style: TextStyle(fontSize: fontScale*0.95,),),
+                                ),
+                                Divider(thickness: 1.5,),
+                                ListView.separated(
+                                  itemBuilder: (context, index) {
+                                    return Container(
+                                        decoration: BoxDecoration(
+                                          color: pickColor(allDayEvents[index].id),
+                                          borderRadius: BorderRadius.all(const Radius.circular(30.0))
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(allDayEvents[index].title,style: TextStyle(fontSize: fontScale*0.85)),
+                                        ),
+                                    );
+                                  },
+                                  itemCount: allDayEvents.length,
+                                  padding: const EdgeInsets.all(4.0),
+                                  separatorBuilder: (BuildContext context, int index) => const Divider(),
+                                  shrinkWrap: true,
+                                )
+                              ])
+                            : Container(
+                                height: 0,
+                                width: 0,
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+            ),
+//            Positioned(
+//              //added info
+//              left: 0,
+//              bottom: 0,
+//              child: Padding(
+//                padding: const EdgeInsets.all(15),
+//                child: infoText,
+//              ),
+//            ),
+          ]),
         ));
   }
 }

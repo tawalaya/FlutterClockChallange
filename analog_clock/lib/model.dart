@@ -23,6 +23,15 @@ class ClockModel extends ChangeNotifier {
     }
   }
 
+  bool _allDay = true;
+  get allDay => _allDay;
+  set allDay(bool flag) {
+    if (_allDay != flag) {
+      _allDay = flag;
+      notifyListeners();
+    }
+  }
+
   List<String> _calenderIds = new List();
   get calenderIds => _calenderIds;
   set calenderIds(List<String> ids){

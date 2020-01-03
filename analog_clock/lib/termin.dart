@@ -11,6 +11,8 @@ class Termin implements Comparable<Termin> {
     assert(this.start.isBefore(this.end));
   }
 
+  bool get isAllDayEvent => this.end.difference(this.start).inDays >= 1;
+
   Duration get length => this.end.difference(this.start);
 
   Duration lengthIn(DateTime start,DateTime end) {
