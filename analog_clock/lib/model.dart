@@ -32,6 +32,15 @@ class ClockModel extends ChangeNotifier {
     }
   }
 
+  bool _innerCircle = true;
+  get innerCircle => _innerCircle;
+  set innerCircle(bool flag) {
+    if (_innerCircle != flag) {
+      _innerCircle = flag;
+      notifyListeners();
+    }
+  }
+
   List<String> _calenderIds = new List();
   get calenderIds => _calenderIds;
   set calenderIds(List<String> ids){

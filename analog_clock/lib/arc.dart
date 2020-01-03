@@ -98,7 +98,7 @@ class _ArcPainter extends CustomPainter {
     var boxSize = size.shortestSide * scale - arcThickness;
     var fontSize = ((size.shortestSide/2)*thickness*0.9).floor()*1.0;
 
-    textStyle = TextStyle(color: Colors.black,fontSize:  fontSize);
+    textStyle = TextStyle(color: Colors.grey[800],fontSize:  fontSize);
     final xOffset = size.longestSide / 2 - boxSize / 2;
     final yOffset = size.shortestSide / 2 - boxSize / 2;
 
@@ -113,11 +113,11 @@ class _ArcPainter extends CustomPainter {
       ..strokeWidth = arcThickness;
 
     //canvas.drawRect(getRect, Paint()..color = Colors.amber..style = PaintingStyle.stroke);
-
+    final double arcShift = this.thickness/2 + (1 - this.scale)*this.thickness + 0.005; //TODO XXX magic number
     canvas.drawArc(
         getRect,
-        -math.pi / 2.0 + angleStart + (0.03), //TODO XXX magic number
-        angleRadians - (0.06), //TODO XXX magic number
+        -math.pi / 2.0 + angleStart + arcShift,
+        angleRadians - arcShift*2,
         false,
         linePaint);
 
@@ -142,7 +142,8 @@ class _ArcPainter extends CustomPainter {
     angleStart = angleStart%radians(360);
 
     //offset from start of bonding box
-    angleStart += tickSize + 0.01; //TODO XXX magic number
+    final double arcShift = this.thickness/2; //TODO XXX magic number
+    angleStart += tickSize + arcShift;
 
     if (angleStart != 0) {
       final d = 2 * radius * math.sin(angleStart / 2);
@@ -153,11 +154,11 @@ class _ArcPainter extends CustomPainter {
 
     double angle = angleStart;
     double rotation = angle;
-    final angleEnd = angleRadians - 0.03; //TODO XXX magic number
+    final angleEnd = angleRadians - arcShift;
     for (int i = 0; i < text.length; i++) {
       angle = _drawLetter(canvas, text[i], angle, radius);
       rotation += angle;
-      if (rotation > angleStart+angleEnd - 7*tickSize) {
+      if (rotation > angleStart+angleEnd - (8*tickSize+arcShift)) {
 
         //indicate missing letters
         if (text.length - i > 2) {
@@ -192,7 +193,7 @@ class _ArcPainter extends CustomPainter {
     canvas.rotate(newAngle);
 //    canvas.save();
 //    canvas.scale(1,-1);
-    _textPainter.paint(canvas, Offset.zero);
+    _textPainter.paint(canvas, Offset(0, 1));
 //    canvas.restore();
     canvas.translate(d, 0);
 

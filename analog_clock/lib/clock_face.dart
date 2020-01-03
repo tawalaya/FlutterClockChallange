@@ -15,12 +15,14 @@ class ClockFace extends StatelessWidget {
     @required this.primaryColor,
     @required this.secondaryColor,
     @required this.thickness,
+    @required this.scale,
   })  : assert(primaryColor != null),
         assert(thickness != null);
 
-  final double thickness;
   final Color primaryColor;
   final Color secondaryColor;
+  final double scale;
+  final double thickness;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,7 @@ class ClockFace extends StatelessWidget {
           painter: _ClockFacePainter(
             primary: primaryColor,
             secondary:secondaryColor,
+            scale: scale
           ),
         ),
       ),
@@ -44,7 +47,7 @@ class _ClockFacePainter extends CustomPainter {
   Paint thirdPaint;
 
   _ClockFacePainter({
-    @required this.primary, this.secondary,
+    @required this.primary, this.secondary, this.scale
   })  : assert(primary != null), super(){
 
     primaryPaint = Paint()
@@ -65,12 +68,12 @@ class _ClockFacePainter extends CustomPainter {
 
   final Color primary;
   final Color secondary;
+  final double scale;
 
   
   @override
   void paint(Canvas canvas, Size drawSize) {
-
-    var boxSize = drawSize.shortestSide /2 ;
+    var boxSize = drawSize.shortestSide * this.scale / 2;
     final xOffset = drawSize.longestSide / 2 ;
     final yOffset = drawSize.shortestSide / 2 ;
 
@@ -88,7 +91,6 @@ class _ClockFacePainter extends CustomPainter {
       canvas.rotate(tickSize);
     }
     canvas.restore();
-
   }
 
   @override

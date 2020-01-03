@@ -28,7 +28,7 @@ final radiansPerHour = radians(360 / 12);
 
 final radiansPerSecond = radians(360 / 12 / 60);
 //TODO: increase for production
-final calendarRefreshTime = Duration(seconds: 15);
+final calendarRefreshTime = Duration(minutes: 2);
 
 /// A basic analog clock.
 ///
@@ -207,6 +207,7 @@ class _AnalogClockState extends State<AnalogClock> {
     clockFace.add(ClockFace(
       primaryColor: customTheme.primaryColor,
       secondaryColor: customTheme.accentColor,
+      scale: 0.92,
       thickness: 1,
     ));
 
@@ -231,8 +232,8 @@ class _AnalogClockState extends State<AnalogClock> {
       for (Termin t in hourEvents) {
         clockFace.add(Arc(
           color: pickColor(t.id + "1"),
-          scale: 0.92,
-          thickness: 0.05,
+          scale: 1,
+          thickness: 0.06,
           angleRadians:
               math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
           angleStart: t.getRelativeStart(start).hour * radiansPerHour +
@@ -241,37 +242,28 @@ class _AnalogClockState extends State<AnalogClock> {
         ));
       }
 
-      clockFace.add(Disk(
-        color: customTheme.backgroundColor,
-        scale: 0.82,
-        thickness: 2,
-        angleRadians: 2 * math.pi,
-        angleStart: 0,
-      ));
+      if (widget.model.innerCircle) {
+        final minuteEvents = _eventArray.where((t) =>
+        t.includedIn(
+            lastHour, lastHour.add(Duration(minutes: 59, seconds: 59))) &&
+            !t.isAllDayEvent);
 
-      final minuteEvents = _eventArray.where((t) => t.includedIn(
-          lastHour, lastHour.add(Duration(minutes: 59, seconds: 59))) && !t.isAllDayEvent);
-
-      //inner ring
-      for (Termin t in minuteEvents) {
-        clockFace.add(Arc(
-          color: pickColor(t.id + "1"),
-          scale: 0.855,
-          thickness: 0.05,
-          angleRadians:
-              t.lengthIn(lastHour, nextHour).inMinutes * radiansPerTick,
-          angleStart: t.getRelativeStart(lastHour).minute * radiansPerTick,
-          text: t.title,
-        ));
-      }
-      if (!widget.model.pieMode) {
-        clockFace.add(Disk(
-          color: customTheme.backgroundColor,
-          scale: 0.77,
-          thickness: 2,
-          angleRadians: 2 * math.pi,
-          angleStart: 0,
-        ));
+        //inner ring
+        for (Termin t in minuteEvents) {
+          clockFace.add(Arc(
+            color: pickColor(t.id + "1"),
+            scale: 0.83,
+            thickness: 0.07,
+            angleRadians:
+            t
+                .lengthIn(lastHour, nextHour)
+                .inMinutes * radiansPerTick,
+            angleStart: t
+                .getRelativeStart(lastHour)
+                .minute * radiansPerTick,
+            text: t.title,
+          ));
+        }
       }
     }
 
@@ -306,14 +298,14 @@ class _AnalogClockState extends State<AnalogClock> {
                         //minutes
                         color: customTheme.highlightColor,
                         thickness: 6,
-                        size: 0.85,
+                        size: 0.8,
                         angleRadians: _now.minute * radiansPerTick,
                       ),
                       DrawnHand(
                         //seconds
                         color: customTheme.accentColor,
                         thickness: 2,
-                        size: 0.95,
+                        size: 0.85,
                         angleRadians: _now.second * radiansPerTick,
                       ),
                       Disk(
@@ -343,10 +335,10 @@ class _AnalogClockState extends State<AnalogClock> {
                           padding: const EdgeInsets.only(left:5,top: 10),
                           child: infoText,
                         ),
-                        (widget.model.allDay && allDayEvents != null)
+                        (widget.model.allDay && allDayEvents != null && allDayEvents.length > 0)
                             ? Column(children: [
                                 Padding(
-                                  padding: const EdgeInsets.all(5.0),
+                                  padding: const EdgeInsets.only(top: 5),
                                   child: Text("All Day Events",style: TextStyle(fontSize: fontScale*0.95,),),
                                 ),
                                 Divider(thickness: 1.5,),
@@ -359,13 +351,20 @@ class _AnalogClockState extends State<AnalogClock> {
                                         ),
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
-                                          child: Text(allDayEvents[index].title,style: TextStyle(fontSize: fontScale*0.85)),
+                                          child: Text(
+                                            allDayEvents[index].title,
+                                            style: TextStyle(
+                                              fontSize: fontScale * 0.85,
+                                              color: Colors.grey[800],
+                                            ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                         ),
                                     );
                                   },
                                   itemCount: allDayEvents.length,
-                                  padding: const EdgeInsets.all(4.0),
-                                  separatorBuilder: (BuildContext context, int index) => const Divider(),
+                                  separatorBuilder: (BuildContext context, int index) => const SizedBox(height: 4,),
                                   shrinkWrap: true,
                                 )
                               ])
