@@ -204,12 +204,6 @@ class _AnalogClockState extends State<AnalogClock> {
     );
 
     final clockFace = <Widget>[];
-    clockFace.add(ClockFace(
-      primaryColor: customTheme.primaryColor,
-      secondaryColor: customTheme.accentColor,
-      scale: 0.92,
-      thickness: 1,
-    ));
 
     if (_eventArray != null) {
       final lastMidnight = new DateTime(_now.year, _now.month, _now.day, 0, 0);
@@ -283,8 +277,18 @@ class _AnalogClockState extends State<AnalogClock> {
                   padding: const EdgeInsets.all(15),
                   child: Stack(
                     children: [
-                      Stack(
-                        children: clockFace,
+                      RepaintBoundary(
+                        child: ClockFace(
+                          primaryColor: customTheme.primaryColor,
+                          secondaryColor: customTheme.accentColor,
+                          scale: 0.92,
+                          thickness: 1,
+                        ),
+                      ),
+                      RepaintBoundary(
+                        child: Stack(
+                          children: clockFace,
+                        ),
                       ),
                       DrawnHand(
                         //hour
@@ -301,12 +305,14 @@ class _AnalogClockState extends State<AnalogClock> {
                         size: 0.8,
                         angleRadians: _now.minute * radiansPerTick,
                       ),
-                      DrawnHand(
-                        //seconds
-                        color: customTheme.accentColor,
-                        thickness: 2,
-                        size: 0.85,
-                        angleRadians: _now.second * radiansPerTick,
+                      RepaintBoundary(
+                        child: DrawnHand(
+                          //seconds
+                          color: customTheme.accentColor,
+                          thickness: 2,
+                          size: 0.85,
+                          angleRadians: _now.second * radiansPerTick,
+                        ),
                       ),
                       Disk(
                         color: customTheme.primaryColor,

@@ -34,6 +34,8 @@ class ClockFace extends StatelessWidget {
             secondary:secondaryColor,
             scale: scale
           ),
+          willChange: false,
+          isComplex: true,
         ),
       ),
     );

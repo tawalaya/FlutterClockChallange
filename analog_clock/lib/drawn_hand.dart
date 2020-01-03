@@ -41,6 +41,8 @@ class DrawnHand extends Hand {
     return Center(
       child: SizedBox.expand(
         child: CustomPaint(
+          isComplex: true,
+          willChange: true,
           painter: _HandPainter(
             handSize: size,
             lineWidth: thickness,

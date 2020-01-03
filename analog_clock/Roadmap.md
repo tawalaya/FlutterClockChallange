@@ -18,6 +18,7 @@ Based on: https://flutter.dev/clock#submissions
 # optinal
 - Calendar View
 
+Check out RepaintBoundary?
 
 # Resources
 - https://pub.dev/packages/device_calendar

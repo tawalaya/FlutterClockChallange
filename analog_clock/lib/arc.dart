@@ -49,6 +49,8 @@ class Arc extends Hand {
     return Center(
       child: SizedBox.expand(
         child: CustomPaint(
+          isComplex: true,
+          willChange: false,
           painter: _ArcPainter(
             scale: size,
             thickness: thickness,
