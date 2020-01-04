@@ -113,7 +113,14 @@ class _AnalogClockState extends State<AnalogClock> {
       if (events != null) {
         for (Event e in events) {
           if (e != null) {
-            eventArray.add(Termin(e.start, e.end, e.title, e.eventId));
+            if(e.allDay){
+              if(e.end.difference(lastMidnight).inHours  > 12) {
+                eventArray.add(
+                    Termin(lastMidnight, nextMidnight, e.title, e.eventId));
+              }
+            } else {
+              eventArray.add(Termin(e.start, e.end, e.title, e.eventId));
+            }
           }
         }
       }
