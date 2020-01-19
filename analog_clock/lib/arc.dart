@@ -6,6 +6,7 @@ import 'dart:developer';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:analog_clock/analog_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 
@@ -98,7 +99,7 @@ class _ArcPainter extends CustomPainter {
 
     final arcThickness = (this.thickness*size.shortestSide/2)+1;
     var boxSize = size.shortestSide * scale - arcThickness;
-    var fontSize = ((size.shortestSide/2)*thickness*0.9).floor()*1.0;
+    var fontSize = ((size.shortestSide/2)*thickness*0.55).floor()*1.0;
 
     textStyle = TextStyle(color: Colors.grey[800],fontSize:  fontSize);
     final xOffset = size.longestSide / 2 - boxSize / 2;
@@ -116,12 +117,15 @@ class _ArcPainter extends CustomPainter {
 
     //canvas.drawRect(getRect, Paint()..color = Colors.amber..style = PaintingStyle.stroke);
     final double arcShift = this.thickness/2 + (1 - this.scale)*this.thickness + 0.005; //TODO XXX magic number
+
     canvas.drawArc(
         getRect,
         -math.pi / 2.0 + angleStart + arcShift,
         angleRadians - arcShift*2,
         false,
         linePaint);
+
+
 
     if (text != null) {
       _textPainter.text = TextSpan(text: "...", style: textStyle);
@@ -139,7 +143,7 @@ class _ArcPainter extends CustomPainter {
   }
   //XXX: Fix text offset
   void _paint_text(Canvas canvas, Size size, double textGabWidth) {
-    final radius = size.shortestSide * scale * 0.5;
+    final radius = size.shortestSide * scale * 0.495; //TODO XXX magic number
     canvas.translate(size.width / 2, size.height / 2 - radius);
     angleStart = angleStart%radians(360);
 

@@ -234,12 +234,12 @@ class _AnalogClockState extends State<AnalogClock> {
         clockFace.add(Arc(
           color: pickColor(t.id + "1"),
           scale: 1,
-          thickness: 0.06,
+          thickness: 0.08,
           angleRadians:
               math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
           angleStart: t.getRelativeStart(start).hour * radiansPerHour +
               t.getRelativeStart(start).minute * radiansPerSecond,
-          text: t.title,
+          text: "${t.title} ${DateFormat.Hm().format(t.start)}-${DateFormat.Hm().format(t.end)}",
         ));
       }
 
@@ -253,8 +253,8 @@ class _AnalogClockState extends State<AnalogClock> {
         for (Termin t in minuteEvents) {
           clockFace.add(Arc(
             color: pickColor(t.id + "1"),
-            scale: 0.83,
-            thickness: 0.07,
+            scale: 0.75,
+            thickness: 0.085,
             angleRadians:
             t
                 .lengthIn(lastHour, nextHour)
@@ -288,7 +288,8 @@ class _AnalogClockState extends State<AnalogClock> {
                         child: ClockFace(
                           primaryColor: customTheme.primaryColor,
                           secondaryColor: customTheme.accentColor,
-                          scale: 0.92,
+                          second:_now.second,
+                          scale: 0.87,
                           thickness: 1,
                         ),
                       ),
@@ -301,33 +302,33 @@ class _AnalogClockState extends State<AnalogClock> {
                         //hour
                         color: customTheme.primaryColor,
                         size: 0.6,
-                        thickness: 6,
+                        thickness: 3,
                         angleRadians: _now.hour * radiansPerHour +
                             (_now.minute / 60) * radiansPerHour,
                       ),
                       DrawnHand(
                         //minutes
                         color: customTheme.highlightColor,
-                        thickness: 6,
+                        thickness: 3,
                         size: 0.8,
                         angleRadians: _now.minute * radiansPerTick,
                       ),
-                      RepaintBoundary(
-                        child: DrawnHand(
-                          //seconds
-                          color: customTheme.accentColor,
-                          thickness: 2,
-                          size: 0.85,
-                          angleRadians: _now.second * radiansPerTick,
-                        ),
-                      ),
-                      Disk(
-                        color: customTheme.primaryColor,
-                        scale: 0.04,
-                        thickness: 2,
-                        angleRadians: 2 * math.pi,
-                        angleStart: 0,
-                      ),
+//                      RepaintBoundary(
+//                        child: DrawnHand(
+//                          //seconds
+//                          color: customTheme.accentColor,
+//                          thickness: 2,
+//                          size: 0.85,
+//                          angleRadians: _now.second * radiansPerTick,
+//                        ),
+//                      ),
+//                      Disk(
+//                        color: customTheme.primaryColor,
+//                        scale: 0.04,
+//                        thickness: 2,
+//                        angleRadians: 2 * math.pi,
+//                        angleStart: 0,
+//                      ),
                     ],
                   ),
                 ),
@@ -350,10 +351,10 @@ class _AnalogClockState extends State<AnalogClock> {
                         ),
                         (widget.model.allDay && allDayEvents != null && allDayEvents.length > 0)
                             ? Column(children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5),
-                                  child: Text("All Day Events",style: TextStyle(fontSize: fontScale*0.95,),),
-                                ),
+//                                Padding(
+//                                  padding: const EdgeInsets.only(top: 5),
+//                                  child: Text("All Day Events",style: TextStyle(fontSize: fontScale,),),
+//                                ),
                                 Divider(thickness: 1.5,),
                                 ListView.separated(
                                   itemBuilder: (context, index) {

@@ -94,8 +94,8 @@ class _HandPainter extends CustomPainter {
     final length = size.shortestSide * 0.5 * handSize;
     final position = center + Offset(math.cos(angle), math.sin(angle)) * length;
     final start = (center +
-        Offset(math.cos(angle), math.sin(angle)) * (size.shortestSide) *0.5*0.07)
-        +Offset(math.cos(angle), math.sin(angle)) * 0.5*lineWidth;
+        Offset(math.cos(angle), math.sin(angle)) * (size.shortestSide) *0.2*0.07)
+        +Offset(math.cos(angle), math.sin(angle)) * 0.2*lineWidth;
 
     canvas.drawLine(start+Offset(2,2), position+Offset(2*0.9,2*0.9),shadow );
     canvas.drawLine(start, position, linePaint);
