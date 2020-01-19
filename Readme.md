@@ -11,8 +11,14 @@ This Submission was tested on Android only.
 
 ### Screenshots:
 
-![1](screenshots/Example%20(1).png)
-![2](screenshots/Example%20(2).png)
-![3](screenshots/Example%20(3).png)
-![4](screenshots/Example%20(4).png)
-![5](screenshots/Example%20(5).png)
+#### Default Theme:
+![1](screenshots/Example%20(2).png)
+![2](screenshots/Example%20(3).png)
+![3](screenshots/Example%20(4).png)
+![4](screenshots/Example%20(5).png)
+![5](screenshots/Example%20(6).png)
+
+#### Dark Theme:
+![6](screenshots/Example%20(1).png)
+![7](screenshots/Example%20(7).png)
+![8](screenshots/Example%20(8).png)
