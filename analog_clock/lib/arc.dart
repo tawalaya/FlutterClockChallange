@@ -7,6 +7,8 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:analog_clock/analog_clock.dart';
+import 'package:analog_clock/termin.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 
@@ -20,6 +22,8 @@ final tickSize = radians(360 / 12 / 60);
 /// This hand is used to build the second and minute hands, and demonstrates
 /// building a custom hand.
 class Arc extends Hand {
+  final Color textColor;
+
   /// Create a const clock [Hand].
   ///
   /// All of the parameters are required and must not be null.
@@ -29,6 +33,8 @@ class Arc extends Hand {
     @required double scale,
     @required double angleRadians,
     @required this.angleStart,
+    @required this.textColor,
+    @required  this.type,
     this.text,
   })  : assert(color != null),
         assert(thickness != null),
@@ -44,6 +50,7 @@ class Arc extends Hand {
   final double thickness;
   final double angleStart;
   final String text;
+  final Fit type;
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +64,10 @@ class Arc extends Hand {
             thickness: thickness,
             angleRadians: angleRadians,
             color: color,
+            textColor:this.textColor,
             angleStart: angleStart,
             text: text,
+            type: this.type,
           ),
         ),
       ),
@@ -68,12 +77,16 @@ class Arc extends Hand {
 
 /// [CustomPainter] that draws a clock hand.
 class _ArcPainter extends CustomPainter {
+
+
   _ArcPainter({
     @required this.scale,
     @required this.thickness,
     @required this.angleRadians,
     @required this.angleStart,
     @required this.color,
+    @required this.textColor,
+    @required this.type,
     this.text,
   })  : assert(scale != null),
         assert(thickness != null),
@@ -81,18 +94,25 @@ class _ArcPainter extends CustomPainter {
         assert(angleStart != null),
         assert(color != null),
         assert(scale >= 0.0),
-        assert(scale <= 1.0);
+        assert(scale <= 1.0) {
+    capPaint  = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+  }
 
-  double scale;
-  double thickness;
-  double angleStart;
-  double angleRadians;
-  Color color;
+  final double scale;
+  final double thickness;
+  final double angleStart;
+  final double angleRadians;
+  final Color color;
+  final Color textColor;
+  final Fit type;
 
   TextStyle textStyle;
 
   final String text;
-  final _textPainter = TextPainter(textDirection: TextDirection.ltr);
+  final TextPainter _textPainter = TextPainter(textDirection: TextDirection.ltr);
+  Paint capPaint;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -101,7 +121,7 @@ class _ArcPainter extends CustomPainter {
     var boxSize = size.shortestSide * scale - arcThickness;
     var fontSize = ((size.shortestSide/2)*thickness*0.55).floor()*1.0;
 
-    textStyle = TextStyle(color: Colors.grey[800],fontSize:  fontSize);
+    textStyle = TextStyle(color: textColor,fontSize:  fontSize);
     final xOffset = size.longestSide / 2 - boxSize / 2;
     final yOffset = size.shortestSide / 2 - boxSize / 2;
 
@@ -114,9 +134,17 @@ class _ArcPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
       ..strokeWidth = arcThickness;
+      /*
+      ..shader = new SweepGradient(colors: [
+      Color(0xFFB4EC51),
+      Color(0xFF3023AE),
+    ], startAngle: 0.0, endAngle: angleRadians)
+        .createShader(Rect.fromCircle(center: arcOffset, radius: arcThickness));
+
+       */
 
     //canvas.drawRect(getRect, Paint()..color = Colors.amber..style = PaintingStyle.stroke);
-    final double arcShift = this.thickness/2 + (1 - this.scale)*this.thickness + 0.005; //TODO XXX magic number
+    final double arcShift = this.thickness/2 + (1 - this.scale)*this.thickness + 0.003; //TODO XXX magic number
 
     canvas.drawArc(
         getRect,
@@ -125,7 +153,28 @@ class _ArcPainter extends CustomPainter {
         false,
         linePaint);
 
+    var capStart = arcThickness / 2;
+    var capEnd = capStart * 0.98;
 
+    //begin cap
+    if ([Fit.ending, Fit.over].contains(this.type)) {
+      canvas.drawPath(Path()..addPolygon([
+        getRect.topCenter + Offset(0, capStart),
+        getRect.topCenter + Offset(capStart+0.01, capEnd),
+        getRect.topCenter + Offset(capStart+0.01, -capEnd),
+        getRect.topCenter + Offset(0, -capStart)
+      ], true), capPaint);
+    }
+
+    //end cap
+    if ([Fit.starting, Fit.over].contains(this.type)) {
+      canvas.drawPath(Path()..addPolygon([
+        getRect.topCenter + Offset(0, capStart),
+        getRect.topCenter + Offset(-capStart+0.01, capEnd),
+        getRect.topCenter + Offset(-capStart+0.01, -capEnd),
+        getRect.topCenter + Offset(0, -capStart)
+      ], true), capPaint);
+    }
 
     if (text != null) {
       _textPainter.text = TextSpan(text: "...", style: textStyle);
@@ -145,26 +194,26 @@ class _ArcPainter extends CustomPainter {
   void _paint_text(Canvas canvas, Size size, double textGabWidth) {
     final radius = size.shortestSide * scale * 0.495; //TODO XXX magic number
     canvas.translate(size.width / 2, size.height / 2 - radius);
-    angleStart = angleStart%radians(360);
+    var textAngle = angleStart%radians(360);
 
     //offset from start of bonding box
     final double arcShift = this.thickness/2; //TODO XXX magic number
-    angleStart += tickSize + arcShift;
+    textAngle += tickSize + arcShift;
 
-    if (angleStart != 0) {
-      final d = 2 * radius * math.sin(angleStart / 2);
-      final rotationAngle = _calculateRotationAngle(0, angleStart);
+    if (textAngle != 0) {
+      final d = 2 * radius * math.sin(textAngle / 2);
+      final rotationAngle = _calculateRotationAngle(0, textAngle);
       canvas.rotate(rotationAngle);
       canvas.translate(d, 0);
     }
 
-    double angle = angleStart;
+    double angle = textAngle;
     double rotation = angle;
     final angleEnd = angleRadians - arcShift;
     for (int i = 0; i < text.length; i++) {
       angle = _drawLetter(canvas, text[i], angle, radius);
       rotation += angle;
-      if (rotation > angleStart+angleEnd - (8*tickSize+arcShift)) {
+      if (rotation > textAngle+angleEnd - (8*tickSize+arcShift)) {
 
         //indicate missing letters
         if (text.length - i > 2) {

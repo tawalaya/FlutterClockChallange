@@ -78,7 +78,7 @@ class _HandPainter extends CustomPainter {
       ..strokeWidth = lineWidth
       ..strokeCap = StrokeCap.round;
 
-    shadow = Paint()..color=Color.fromRGBO(0, 0, 0, 1)..strokeWidth = lineWidth..strokeCap = StrokeCap.round..blendMode=BlendMode.softLight;
+    shadow = Paint()..color=color..strokeWidth = lineWidth..strokeCap = StrokeCap.round..blendMode=BlendMode.colorBurn;
   }
 
   double handSize;

@@ -11,6 +11,13 @@
  */
 import 'dart:developer';
 
+enum Fit {
+  within,
+  starting,
+  ending,
+  over,
+}
+
 class Termin implements Comparable<Termin> {
   final DateTime start;
   final DateTime end;
@@ -42,6 +49,24 @@ class Termin implements Comparable<Termin> {
     }
 
     return e.difference(s);
+  }
+
+  Fit fits(DateTime start,DateTime end) {
+
+    if(this.start.isBefore(start) && this.end.isAfter(end)){
+      return Fit.over;
+    }
+
+    if(this.start.isBefore(start) && this.end.isBefore(end)){
+      return Fit.ending;
+    }
+
+    if(this.start.isAfter(start) && this.end.isAfter(end)){
+      return Fit.starting;
+    }
+
+    return Fit.within;
+
   }
 
   DateTime getRelativeStart(DateTime reference) {

@@ -63,18 +63,18 @@ class _ClockFacePainter extends CustomPainter {
   })  : assert(primary != null), super(){
 
     hourPaint = Paint()
-      ..color = primary.withOpacity(0.8)
+      ..color = primary
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
     quaterHourPaint = Paint()
-      ..color = primary.withOpacity(0.8)
+      ..color = primary
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
 
     secondPaint = Paint()
-      ..color = secondary.withOpacity(0.8)
-      ..strokeWidth = 1
+      ..color = primary
+      ..strokeWidth = 2
       ..strokeCap = StrokeCap.square;
   }
 
@@ -83,12 +83,15 @@ class _ClockFacePainter extends CustomPainter {
   
   @override
   void paint(Canvas canvas, Size drawSize) {
-    var boxSize = drawSize.shortestSide * this.scale / 2;
+
+    var boxSize = 0.98*drawSize.shortestSide * this.scale / 2;
     final xOffset = drawSize.longestSide / 2 ;
     final yOffset = drawSize.shortestSide / 2 ;
 
     canvas.save();
+
     canvas.translate(xOffset, yOffset);
+    canvas.rotate(radians(-90));
     for(int i = 0;i<60;i+=1) {
       Paint paint = secondPaint;
       int size = 10;
@@ -104,10 +107,10 @@ class _ClockFacePainter extends CustomPainter {
         draw = true;
       }
 
-      draw = draw || i == second || i == (second-1)%60 || i == (second+1)%60;
+      draw = draw || i == second;// || i == (second-1)%60 || i == (second+1)%60;
 
       if (i == second){
-        size+=5;
+        size+=2;
       }
 
       if(draw) {

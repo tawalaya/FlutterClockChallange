@@ -50,22 +50,24 @@ class _AnalogClockState extends State<AnalogClock> {
   Timer _timer;
   Timer _calenderFetcher;
 
-  List<Color> _eventColors = new List();
+  final colorSchema = [
+    Color(0xFF6A6AFF),
+    Color(0xFF3DE4FC),
+    Color(0xFF33FDC0),
+    Color(0xFF4AE371),
+    Color(0xFFDFE32D),
+    Color(0xFFFFCB2F),
+    Color(0xFFFFAC62),
+    Color(0xFFC87C5B),
+    Color(0xFFFF7373),
+    Color(0xFFCB59E8)
+  ];
+
+
+  List<Color> _eventColors;
 
   _AnalogClockState() {
     _deviceCalendarPlugin = DeviceCalendarPlugin();
-
-    //XXX fix me generate some nice colors for a few events
-    _eventColors.add(Color(0xFF6A6AFF));
-    _eventColors.add(Color(0xFF3DE4FC));
-    _eventColors.add(Color(0xFF33FDC0));
-    _eventColors.add(Color(0xFF4AE371));
-    _eventColors.add(Color(0xFFDFE32D));
-    _eventColors.add(Color(0xFFFFCB2F));
-    _eventColors.add(Color(0xFFFFAC62));
-    _eventColors.add(Color(0xFFC87C5B));
-    _eventColors.add(Color(0xFFFF7373));
-    _eventColors.add(Color(0xFFCB59E8));
   }
 
   @override
@@ -164,6 +166,8 @@ class _AnalogClockState extends State<AnalogClock> {
     return _eventColors[id.hashCode % _eventColors.length];
   }
 
+  final ring_margin = 0.08 + 0.01;
+
   @override
   Widget build(BuildContext context) {
     final  screenWidth = MediaQuery.of(context).size.width;
@@ -182,7 +186,7 @@ class _AnalogClockState extends State<AnalogClock> {
     final customTheme = Theme.of(context).brightness == Brightness.light
         ? Theme.of(context).copyWith(
             // Hour hand.
-            primaryColor: Color(0xFF383838),
+            primaryColor: Color(0xFF383838).withOpacity(0.8),
             // Minute hand.
             highlightColor: Color(0xFF4d4d4d),
             // Second hand.
@@ -190,11 +194,13 @@ class _AnalogClockState extends State<AnalogClock> {
             backgroundColor: Color(0xFFF1F1F1),
           )
         : Theme.of(context).copyWith(
-            primaryColor: Color(0xFFF8F8F8),
+            primaryColor: Color(0xFFF8F8F8).withOpacity(0.8),
             highlightColor: Color(0xFFEEEEEE),
             accentColor: Color(0xFFCCCCCC),
             backgroundColor: Color(0xFF3b3b3b),
           );
+
+    _eventColors = colorSchema.map((c)=>Color.lerp(c, customTheme.backgroundColor, 0.5)).toList();
 
     final time = DateFormat.Hms().format(_now);
 
@@ -233,13 +239,15 @@ class _AnalogClockState extends State<AnalogClock> {
       for (Termin t in hourEvents) {
         clockFace.add(Arc(
           color: pickColor(t.id + "1"),
+          textColor:customTheme.primaryColor,
           scale: 1,
           thickness: 0.08,
+          type:t.fits(start, end),
           angleRadians:
               math.max(0, t.lengthIn(start, end).inMinutes) * radiansPerSecond,
           angleStart: t.getRelativeStart(start).hour * radiansPerHour +
               t.getRelativeStart(start).minute * radiansPerSecond,
-          text: "${t.title} ${DateFormat.Hm().format(t.start)}-${DateFormat.Hm().format(t.end)}",
+          text: "${t.title}  ${DateFormat.Hm().format(t.start)}-${DateFormat.Hm().format(t.end)}",
         ));
       }
 
@@ -251,17 +259,15 @@ class _AnalogClockState extends State<AnalogClock> {
 
         //inner ring
         for (Termin t in minuteEvents) {
+
           clockFace.add(Arc(
             color: pickColor(t.id + "1"),
-            scale: 0.75,
-            thickness: 0.085,
-            angleRadians:
-            t
-                .lengthIn(lastHour, nextHour)
-                .inMinutes * radiansPerTick,
-            angleStart: t
-                .getRelativeStart(lastHour)
-                .minute * radiansPerTick,
+            textColor:customTheme.primaryColor,
+            scale: 1-2*(ring_margin),
+            thickness: 0.08,
+            type:t.fits(lastHour, nextHour),
+            angleRadians: t.lengthIn(lastHour, nextHour).inMinutes * radiansPerTick,
+            angleStart: t.getRelativeStart(lastHour).minute * radiansPerTick,
             text: t.title,
           ));
         }
@@ -284,12 +290,12 @@ class _AnalogClockState extends State<AnalogClock> {
                   padding: const EdgeInsets.all(15),
                   child: Stack(
                     children: [
-                      RepaintBoundary(
+                     RepaintBoundary(
                         child: ClockFace(
                           primaryColor: customTheme.primaryColor,
                           secondaryColor: customTheme.accentColor,
                           second:_now.second,
-                          scale: 0.87,
+                          scale: 1-1*ring_margin,
                           thickness: 1,
                         ),
                       ),
@@ -301,16 +307,16 @@ class _AnalogClockState extends State<AnalogClock> {
                       DrawnHand(
                         //hour
                         color: customTheme.primaryColor,
-                        size: 0.6,
+                        size: 0.45,
                         thickness: 3,
                         angleRadians: _now.hour * radiansPerHour +
                             (_now.minute / 60) * radiansPerHour,
                       ),
                       DrawnHand(
                         //minutes
-                        color: customTheme.highlightColor,
+                        color: customTheme.primaryColor,
                         thickness: 3,
-                        size: 0.8,
+                        size: 1-3.3*ring_margin, //TODO: XXX Magic Number
                         angleRadians: _now.minute * radiansPerTick,
                       ),
 //                      RepaintBoundary(
@@ -321,13 +327,6 @@ class _AnalogClockState extends State<AnalogClock> {
 //                          size: 0.85,
 //                          angleRadians: _now.second * radiansPerTick,
 //                        ),
-//                      ),
-//                      Disk(
-//                        color: customTheme.primaryColor,
-//                        scale: 0.04,
-//                        thickness: 2,
-//                        angleRadians: 2 * math.pi,
-//                        angleStart: 0,
 //                      ),
                     ],
                   ),
@@ -351,10 +350,6 @@ class _AnalogClockState extends State<AnalogClock> {
                         ),
                         (widget.model.allDay && allDayEvents != null && allDayEvents.length > 0)
                             ? Column(children: [
-//                                Padding(
-//                                  padding: const EdgeInsets.only(top: 5),
-//                                  child: Text("All Day Events",style: TextStyle(fontSize: fontScale,),),
-//                                ),
                                 Divider(thickness: 1.5,),
                                 ListView.separated(
                                   itemBuilder: (context, index) {
@@ -369,7 +364,7 @@ class _AnalogClockState extends State<AnalogClock> {
                                             allDayEvents[index].title,
                                             style: TextStyle(
                                               fontSize: fontScale * 0.85,
-                                              color: Colors.grey[800],
+                                              color: customTheme.primaryColor,
                                             ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
