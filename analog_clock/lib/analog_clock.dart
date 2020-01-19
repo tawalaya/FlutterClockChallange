@@ -186,7 +186,7 @@ class _AnalogClockState extends State<AnalogClock> {
     final customTheme = Theme.of(context).brightness == Brightness.light
         ? Theme.of(context).copyWith(
             // Hour hand.
-            primaryColor: Color(0xFF383838).withOpacity(0.8),
+            primaryColor: Color(0xFF515151).withOpacity(0.8),
             // Minute hand.
             highlightColor: Color(0xFF4d4d4d),
             // Second hand.
@@ -338,7 +338,7 @@ class _AnalogClockState extends State<AnalogClock> {
               child: Container(
                   width: screenWidth*0.20,
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.only(right: 16, bottom: 16),
                     child: Column(
                       children: <Widget>[
                         Expanded(
@@ -359,11 +359,11 @@ class _AnalogClockState extends State<AnalogClock> {
                                           borderRadius: BorderRadius.all(const Radius.circular(30.0))
                                         ),
                                         child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
+                                          padding: const EdgeInsets.all(6.0),
                                           child: Text(
                                             allDayEvents[index].title,
                                             style: TextStyle(
-                                              fontSize: fontScale * 0.85,
+                                              fontSize: fontScale * 0.7,
                                               color: customTheme.primaryColor,
                                             ),
                                               maxLines: 1,

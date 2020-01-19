@@ -117,7 +117,7 @@ class _ArcPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
 
-    final arcThickness = (this.thickness*size.shortestSide/2)+1;
+    final arcThickness = (this.thickness*size.shortestSide/2)-1;
     var boxSize = size.shortestSide * scale - arcThickness;
     var fontSize = ((size.shortestSide/2)*thickness*0.55).floor()*1.0;
 
@@ -134,14 +134,6 @@ class _ArcPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
       ..strokeWidth = arcThickness;
-      /*
-      ..shader = new SweepGradient(colors: [
-      Color(0xFFB4EC51),
-      Color(0xFF3023AE),
-    ], startAngle: 0.0, endAngle: angleRadians)
-        .createShader(Rect.fromCircle(center: arcOffset, radius: arcThickness));
-
-       */
 
     //canvas.drawRect(getRect, Paint()..color = Colors.amber..style = PaintingStyle.stroke);
     final double arcShift = this.thickness/2 + (1 - this.scale)*this.thickness + 0.003; //TODO XXX magic number
@@ -160,7 +152,7 @@ class _ArcPainter extends CustomPainter {
     if ([Fit.ending, Fit.over].contains(this.type)) {
       canvas.drawPath(Path()..addPolygon([
         getRect.topCenter + Offset(0, capStart),
-        getRect.topCenter + Offset(capStart+0.01, capEnd),
+        getRect.topCenter + Offset(capStart+0.01, capEnd+0.5),
         getRect.topCenter + Offset(capStart+0.01, -capEnd),
         getRect.topCenter + Offset(0, -capStart)
       ], true), capPaint);
@@ -170,7 +162,7 @@ class _ArcPainter extends CustomPainter {
     if ([Fit.starting, Fit.over].contains(this.type)) {
       canvas.drawPath(Path()..addPolygon([
         getRect.topCenter + Offset(0, capStart),
-        getRect.topCenter + Offset(-capStart+0.01, capEnd),
+        getRect.topCenter + Offset(-capStart+0.01, capEnd+0.5),
         getRect.topCenter + Offset(-capStart+0.01, -capEnd),
         getRect.topCenter + Offset(0, -capStart)
       ], true), capPaint);

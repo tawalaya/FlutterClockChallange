@@ -75,7 +75,7 @@ class _ClockFacePainter extends CustomPainter {
     secondPaint = Paint()
       ..color = primary
       ..strokeWidth = 2
-      ..strokeCap = StrokeCap.square;
+      ..strokeCap = StrokeCap.round;
   }
 
 
@@ -110,7 +110,7 @@ class _ClockFacePainter extends CustomPainter {
       draw = draw || i == second;// || i == (second-1)%60 || i == (second+1)%60;
 
       if (i == second){
-        size+=2;
+        size+=3;
       }
 
       if(draw) {
